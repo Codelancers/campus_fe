@@ -14,6 +14,7 @@ export const removeToken = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("role");
   localStorage.removeItem("userData");
+  localStorage.removeItem("adminData");
 };
 
 export const getUserRole = () => {
@@ -26,7 +27,26 @@ export const getUserData = () => {
 };
 
 export const setUserData = (data) => {
+  // Store full response data
   localStorage.setItem("userData", JSON.stringify(data));
+  
+  // Also store user and admin separately if they exist
+  if (data.user) {
+    localStorage.setItem("user", JSON.stringify(data.user));
+  }
+  if (data.admin) {
+    localStorage.setItem("adminData", JSON.stringify(data.admin));
+  }
+};
+
+export const getAdminData = () => {
+  const adminData = localStorage.getItem("adminData");
+  return adminData ? JSON.parse(adminData) : null;
+};
+
+export const getUser = () => {
+  const user = localStorage.getItem("user");
+  return user ? JSON.parse(user) : null;
 };
 
 export const isTokenValid = () => {

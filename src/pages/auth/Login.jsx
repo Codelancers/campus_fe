@@ -27,7 +27,34 @@ const Login = () => {
       navigate('/verify-otp', { state: { email } });
     } catch (error) {
       console.error('Send OTP error:', error);
-      toast.error(error.response?.data?.message || 'Failed to send OTP. Please try again.');
+      
+      // Handle different error formats
+      let errorMessage = 'Failed to send OTP. Please try again.';
+      
+      if (error.message) {
+        // Check if it's "user not found" error
+        if (error.message.toLowerCase().includes('user not found')) {
+          errorMessage = 'User not found. Please check your email or create an account.';
+        } else {
+          errorMessage = error.message;
+        }
+      } else if (error.response?.data) {
+        // Handle string response
+        if (typeof error.response.data === 'string') {
+          const errorData = error.response.data.toLowerCase();
+          if (errorData.includes('user not found')) {
+            errorMessage = 'User not found. Please check your email or create an account.';
+          } else {
+            errorMessage = error.response.data;
+          }
+        } else if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data.error) {
+          errorMessage = error.response.data.error;
+        }
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

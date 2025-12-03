@@ -26,52 +26,78 @@ const OTPVerification = () => {
     try {
       const response = await verifyUserOTP(email, otp);
       
+      console.log('Student OTP verification response:', response);
+      
+      // Extract response data
+      const responseData = response.responseData || response;
+      
       // Store JWT token
-      const token = response.token;
+      const token = response.token || responseData?.token;
       if (!token) {
         throw new Error('No token received from server');
       }
 
+      // Check if roles array contains "STUDENT"
+      const roles = responseData?.roles || responseData?.user?.roles || [];
+      const hasStudentRole = Array.isArray(roles) && roles.includes('STUDENT');
+      
+      if (!hasStudentRole) {
+        toast.error('These are not student credentials. Please use student login.');
+        setLoading(false);
+        return;
+      }
+
+      console.log('Token extracted successfully:', token.substring(0, 20) + '...');
+      console.log('Full response data:', responseData);
+
       // Store token in localStorage
-      setToken(token);
+      setToken(token, 'STUDENT');
 
-      // Store full response in localStorage
-      setUserData(response);
+      // Store full response in localStorage (token, user, admin, roles, etc.)
+      setUserData({
+        token: token,
+        ...responseData
+      });
 
-      // Extract role from JWT token or response
-      let role = response.role;
-      
-      // If role is not in response, try to decode from JWT
-      if (!role) {
-        const decoded = decodeToken(token);
-        role = decoded?.role || decoded?.userRole || decoded?.type;
-      }
-      
-      // Default to STUDENT if role is still not found
-      if (!role) {
-        role = 'STUDENT';
-      }
-      
-      // Normalize role to uppercase
-      role = role.toUpperCase();
-      
-      // Store role separately for easy access
-      localStorage.setItem('role', role);
+      // Set role as STUDENT
+      localStorage.setItem('role', 'STUDENT');
 
       toast.success('Login successful!');
 
-      // Navigate based on role
-      if (role === 'ADMIN') {
-        navigate('/admin');
-      } else if (role === 'STUDENT') {
-        navigate('/student');
-      } else {
-        // Default to student if role is unknown
-        navigate('/student');
-      }
+      // Navigate to student dashboard
+      navigate('/student', { replace: true });
     } catch (error) {
       console.error('Verify OTP error:', error);
-      toast.error(error.response?.data?.message || 'Invalid OTP. Please try again.');
+      console.error('Error response:', error.response);
+      console.error('Error data:', error.response?.data);
+      
+      // Handle different error formats
+      let errorMessage = 'Invalid OTP. Please try again.';
+      
+      if (error.message) {
+        // Check if it's "user not found" error
+        if (error.message.toLowerCase().includes('user not found')) {
+          errorMessage = 'User not found. Please check your credentials.';
+        } else {
+          errorMessage = error.message;
+        }
+      } else if (error.response?.data) {
+        // Handle string response
+        if (typeof error.response.data === 'string') {
+          const errorData = error.response.data.toLowerCase();
+          if (errorData.includes('user not found')) {
+            errorMessage = 'User not found. Please check your credentials.';
+          } else {
+            errorMessage = error.response.data;
+          }
+        } else if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data.error) {
+          errorMessage = error.response.data.error;
+        }
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

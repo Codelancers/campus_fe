@@ -37,22 +37,16 @@ const AdminOTPVerification = () => {
       console.log('Admin OTP verification response:', response);
       console.log('Response status:', response.status);
       
-      // Check if status is 200 (success) - axios only resolves for 2xx status codes
-      // But we explicitly check for 200 to be sure
+      // Check if status is 200 (success)
       if (response.status === 200) {
-        // Extract token - handle both string response and object response
-        let token = response.token;
+        // Extract response data - handle both string token and object response
+        let responseData = response.responseData || response;
+        let token = response.token || responseData?.token;
         
-        // If token is not in response.token, check responseData
-        if (!token) {
-          // Case 1: Response is a token string directly
-          if (typeof response.responseData === 'string') {
-            token = response.responseData;
-          }
-          // Case 2: Response is an object with token property
-          else if (response.responseData?.token) {
-            token = response.responseData.token;
-          }
+        // If response is a string (direct token)
+        if (typeof responseData === 'string') {
+          token = responseData;
+          responseData = { token: responseData };
         }
         
         if (!token) {
@@ -60,15 +54,26 @@ const AdminOTPVerification = () => {
           throw new Error('No token received from server');
         }
 
+        // Check if roles array contains "ADMIN"
+        const roles = responseData?.roles || responseData?.admin?.roles || [];
+        const hasAdminRole = Array.isArray(roles) && roles.includes('ADMIN');
+        
+        if (!hasAdminRole) {
+          toast.error('These are not admin credentials. Please use admin login.');
+          setLoading(false);
+          return;
+        }
+
         console.log('Token extracted successfully:', token.substring(0, 20) + '...');
+        console.log('Full response data:', responseData);
 
         // Store token in localStorage
         setToken(token, 'ADMIN');
 
-        // Store full response in localStorage
+        // Store full response in localStorage (token, admin, user, roles, etc.)
         setUserData({
           token: token,
-          ...(typeof response.responseData === 'object' ? response.responseData : {})
+          ...responseData
         });
 
         // Set role as ADMIN
@@ -86,10 +91,31 @@ const AdminOTPVerification = () => {
       console.error('Error response:', error.response);
       console.error('Error data:', error.response?.data);
       
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error || 
-                          error.message || 
-                          'Invalid OTP. Please try again.';
+      // Handle different error formats
+      let errorMessage = 'Invalid OTP. Please try again.';
+      
+      if (error.message) {
+        // Check if it's "admin not found" error
+        if (error.message.toLowerCase().includes('admin not found')) {
+          errorMessage = 'Admin not found. Please check your credentials.';
+        } else {
+          errorMessage = error.message;
+        }
+      } else if (error.response?.data) {
+        // Handle string response
+        if (typeof error.response.data === 'string') {
+          const errorData = error.response.data.toLowerCase();
+          if (errorData.includes('admin not found')) {
+            errorMessage = 'Admin not found. Please check your credentials.';
+          } else {
+            errorMessage = error.response.data;
+          }
+        } else if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data.error) {
+          errorMessage = error.response.data.error;
+        }
+      }
       
       toast.error(errorMessage);
     } finally {

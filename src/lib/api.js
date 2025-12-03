@@ -68,8 +68,32 @@ export const registerUser = async (userData) => {
  * @returns {Promise} API response
  */
 export const sendUserOTP = async (email) => {
-  const response = await api.post('/api/users/otp', { email });
-  return response.data;
+  try {
+    const response = await api.post('/api/users/otp', { email });
+    
+    // Handle string response (like "user not found")
+    if (typeof response.data === 'string') {
+      const lowerData = response.data.toLowerCase();
+      if (lowerData.includes('user not found')) {
+        throw new Error('User not found');
+      }
+    }
+    
+    return response.data;
+  } catch (error) {
+    // Handle string error responses
+    if (error.response?.data) {
+      const errorData = error.response.data;
+      if (typeof errorData === 'string') {
+        const lowerError = errorData.toLowerCase();
+        if (lowerError.includes('user not found')) {
+          throw new Error('User not found');
+        }
+        throw new Error(errorData);
+      }
+    }
+    throw error;
+  }
 };
 
 /**
@@ -85,8 +109,40 @@ export const verifyUserOTP = async (email, otp) => {
     otp: String(otp).trim(),
   };
   
-  const response = await api.post('/api/users/verify', requestBody);
-  return response.data;
+  console.log('User OTP Verification Request:', requestBody);
+  
+  try {
+    const response = await api.post('/api/users/verify', requestBody);
+    
+    // Handle string response (like "user not found")
+    if (typeof response.data === 'string') {
+      const lowerData = response.data.toLowerCase();
+      if (lowerData.includes('user not found')) {
+        throw new Error('User not found');
+      }
+    }
+    
+    // Return full response with status and data
+    return {
+      token: response.data?.token || response.data, // Extracted token
+      status: response.status, // HTTP status code
+      responseData: response.data, // Original response data (full object with token, user, roles, etc.)
+      ...(typeof response.data === 'object' ? response.data : {}), // Spread if object
+    };
+  } catch (error) {
+    // Handle string error responses
+    if (error.response?.data) {
+      const errorData = error.response.data;
+      if (typeof errorData === 'string') {
+        const lowerError = errorData.toLowerCase();
+        if (lowerError.includes('user not found')) {
+          throw new Error('User not found');
+        }
+        throw new Error(errorData);
+      }
+    }
+    throw error;
+  }
 };
 
 /**
@@ -120,8 +176,32 @@ export const registerAdmin = async (adminData) => {
  * @returns {Promise} API response
  */
 export const sendAdminOTP = async (email) => {
-  const response = await api.post('/api/admins/otp', { email });
-  return response.data;
+  try {
+    const response = await api.post('/api/admins/otp', { email });
+    
+    // Handle string response (like "admin not found")
+    if (typeof response.data === 'string') {
+      const lowerData = response.data.toLowerCase();
+      if (lowerData.includes('admin not found')) {
+        throw new Error('Admin not found');
+      }
+    }
+    
+    return response.data;
+  } catch (error) {
+    // Handle string error responses
+    if (error.response?.data) {
+      const errorData = error.response.data;
+      if (typeof errorData === 'string') {
+        const lowerError = errorData.toLowerCase();
+        if (lowerError.includes('admin not found')) {
+          throw new Error('Admin not found');
+        }
+        throw new Error(errorData);
+      }
+    }
+    throw error;
+  }
 };
 
 /**
@@ -139,22 +219,46 @@ export const verifyAdminOTP = async (email, otp) => {
   
   console.log('Admin OTP Verification Request:', requestBody);
   
-  const response = await api.post('/api/admins/verify', requestBody);
-  
-  // Handle both cases:
-  // 1. Response is a token string directly: "eyJhbGciOiJIUzI1NiJ9..."
-  // 2. Response is an object: { token: "eyJhbGciOiJIUzI1NiJ9..." }
-  const token = typeof response.data === 'string' 
-    ? response.data 
-    : (response.data?.token || response.data);
-  
-  // Return full response with status and data
-  return {
-    token: token, // Extracted token
-    status: response.status, // HTTP status code
-    responseData: response.data, // Original response data
-    ...(typeof response.data === 'object' ? response.data : {}), // Spread if object
-  };
+  try {
+    const response = await api.post('/api/admins/verify', requestBody);
+    
+    // Handle string response (like "admin not found")
+    if (typeof response.data === 'string') {
+      const lowerData = response.data.toLowerCase();
+      if (lowerData.includes('admin not found')) {
+        throw new Error('Admin not found');
+      }
+    }
+    
+    // Handle both cases:
+    // 1. Response is a token string directly: "eyJhbGciOiJIUzI1NiJ9..."
+    // 2. Response is an object: { token: "...", admin: {...}, roles: [...] }
+    const responseData = response.data;
+    const token = typeof responseData === 'string' 
+      ? responseData 
+      : (responseData?.token || responseData);
+    
+    // Return full response with status and data
+    return {
+      token: token, // Extracted token
+      status: response.status, // HTTP status code
+      responseData: responseData, // Original response data (full object with token, admin, roles, etc.)
+      ...(typeof responseData === 'object' ? responseData : {}), // Spread if object
+    };
+  } catch (error) {
+    // Handle string error responses
+    if (error.response?.data) {
+      const errorData = error.response.data;
+      if (typeof errorData === 'string') {
+        const lowerError = errorData.toLowerCase();
+        if (lowerError.includes('admin not found')) {
+          throw new Error('Admin not found');
+        }
+        throw new Error(errorData);
+      }
+    }
+    throw error;
+  }
 };
 
 /**
