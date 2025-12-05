@@ -15,8 +15,12 @@ import {
   Users,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { getUser } from '@/lib/token';
 
 const StudentDashboard = () => {
+  const user = getUser();
+  const userName = user ? user.name.split(' ')[0] : 'Student';
+
   // Mock data
   const stats = {
     totalPoints: 0,
@@ -86,7 +90,7 @@ const StudentDashboard = () => {
       {/* Header */}
       <motion.div variants={itemVariants}>
         <h1 className="text-4xl md:text-5xl font-heading font-bold text-[#333333] tracking-tight">
-          Welcome Back! 👋
+          Welcome Back, {userName}! 👋
         </h1>
         <p className="text-lg text-gray-600 mt-2">
           Track your events, achievements, and campus activities
@@ -247,11 +251,10 @@ const StudentDashboard = () => {
                   className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
                   data-testid={`achievement-${index}`}
                 >
-                  <div className={`flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0 ${
-                    achievement.type === 'winner'
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0 ${achievement.type === 'winner'
                       ? 'bg-[#CDDC39]'
                       : 'bg-indigo-100'
-                  }`}>
+                    }`}>
                     {achievement.type === 'winner' ? (
                       <Trophy className="w-5 h-5 text-gray-900" />
                     ) : (

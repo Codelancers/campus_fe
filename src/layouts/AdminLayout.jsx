@@ -22,6 +22,7 @@ import {
   Menu,
   Shield,
 } from 'lucide-react';
+import { getAdminData } from '@/lib/token';
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -36,13 +37,16 @@ const AdminLayout = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Mock admin data
-  const admin = {
-    name: 'Admin User',
-    email: 'admin@college.edu',
-    role: 'Administrator',
-    avatar: null,
-  };
+  // Get admin data from local storage
+  const [admin] = useState(() => {
+    const storedAdmin = getAdminData();
+    return storedAdmin || {
+      name: 'Admin User',
+      email: 'admin@college.edu',
+      role: 'Administrator',
+      avatar: null,
+    };
+  });
 
   const handleLogout = () => {
     navigate('/login');
@@ -66,11 +70,10 @@ const AdminLayout = () => {
           <button
             key={item.name}
             onClick={() => handleNavigation(item.href, mobile)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 w-full text-left ${
-              isActive
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 w-full text-left ${isActive
                 ? 'bg-[#3F51B5] text-white shadow-md'
                 : 'text-gray-700 hover:bg-gray-100'
-            }`}
+              }`}
             data-testid={`admin-nav-${item.name.toLowerCase()}`}
           >
             <item.icon className="w-5 h-5" />
@@ -146,7 +149,7 @@ const AdminLayout = () => {
                   <Avatar className="h-10 w-10 border-2 border-[#3F51B5]">
                     <AvatarImage src={admin.avatar} alt={admin.name} />
                     <AvatarFallback className="bg-[#3F51B5] text-white font-semibold">
-                      {admin.name.split(' ').map(n => n[0]).join('')}
+                      {admin.name ? admin.name.split(' ').map(n => n[0]).join('').substring(0, 2) : 'A'}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -156,7 +159,7 @@ const AdminLayout = () => {
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-semibold text-[#333333]">{admin.name}</p>
                     <p className="text-xs text-gray-500">{admin.email}</p>
-                    <p className="text-xs text-[#3F51B5] font-medium">{admin.role}</p>
+                    <p className="text-xs text-[#3F51B5] font-medium">{admin.role || 'Administrator'}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -191,11 +194,10 @@ const AdminLayout = () => {
                 <button
                   key={item.name}
                   onClick={() => handleNavigation(item.href)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-all duration-200 ${
-                    isActive
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-all duration-200 ${isActive
                       ? 'bg-[#3F51B5] text-white'
                       : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                    }`}
                   data-testid={`admin-desktop-nav-${item.name.toLowerCase()}`}
                 >
                   <item.icon className="w-4 h-4" />

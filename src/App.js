@@ -13,9 +13,21 @@ import AdminSignup from "@/pages/auth/AdminSignup";
 
 // Student Pages
 import StudentDashboard from "@/pages/student/Dashboard";
+import StudentProfile from "@/pages/student/Profile";
+import EventsCatalog from "@/pages/student/EventsCatalog";
+import EventDetails from "@/pages/student/EventDetails";
+import MyCertificates from "@/pages/student/MyCertificates";
+import StudentNotifications from "@/pages/student/Notifications";
 
 // Admin Pages
 import AdminDashboard from "@/pages/admin/Dashboard";
+import AdminProfile from "@/pages/admin/Profile";
+import EventManagement from "@/pages/admin/EventManagement";
+import CreateEvent from "@/pages/admin/CreateEvent";
+import EditEvent from "@/pages/admin/EditEvent";
+import UserManagement from "@/pages/admin/UserManagement";
+import CertificateManagement from "@/pages/admin/CertificateManagement";
+import AdminNotifications from "@/pages/admin/Notifications";
 
 // Common Pages
 import PageUnderConstruction from "@/pages/common/PageUnderConstruction";
@@ -83,10 +95,11 @@ function App() {
             }
           >
             <Route index element={<StudentDashboard />} />
-            <Route path="events" element={<PageUnderConstruction />} />
-            <Route path="certificates" element={<PageUnderConstruction />} />
-            <Route path="notifications" element={<PageUnderConstruction />} />
-            <Route path="profile" element={<PageUnderConstruction />} />
+            <Route path="events" element={<EventsCatalog />} />
+            <Route path="events/:id" element={<EventDetails />} />
+            <Route path="certificates" element={<MyCertificates />} />
+            <Route path="notifications" element={<StudentNotifications />} />
+            <Route path="profile" element={<StudentProfile />} />
             <Route path="under-construction" element={<PageUnderConstruction />} />
           </Route>
 
@@ -100,11 +113,13 @@ function App() {
             }
           >
             <Route index element={<AdminDashboard />} />
-            <Route path="events" element={<PageUnderConstruction />} />
-            <Route path="users" element={<PageUnderConstruction />} />
-            <Route path="certificates" element={<PageUnderConstruction />} />
-            <Route path="notifications" element={<PageUnderConstruction />} />
-            <Route path="profile" element={<PageUnderConstruction />} />
+            <Route path="events" element={<EventManagement />} />
+            <Route path="events/create" element={<CreateEvent />} />
+            <Route path="events/edit/:id" element={<EditEvent />} />
+            <Route path="users" element={<UserManagement />} />
+            <Route path="certificates" element={<CertificateManagement />} />
+            <Route path="notifications" element={<AdminNotifications />} />
+            <Route path="profile" element={<AdminProfile />} />
             <Route path="under-construction" element={<PageUnderConstruction />} />
           </Route>
 

@@ -6,9 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Users, Calendar, Award, TrendingUp, Plus, ArrowRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { motion } from 'framer-motion';
+import { getAdminData } from '@/lib/token';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const admin = getAdminData();
+  const adminName = admin ? admin.name.split(' ')[0] : 'Admin';
 
   // Mock data
   const stats = {
@@ -62,15 +65,15 @@ const AdminDashboard = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl md:text-5xl font-heading font-bold text-[#333333] tracking-tight">
-            Admin Dashboard
+            Welcome Back, {adminName}! 👋
           </h1>
           <p className="text-lg text-gray-600 mt-2">
             Manage events, users, and campus activities
           </p>
         </div>
-        <Button 
+        <Button
           onClick={() => navigate('/admin/under-construction')}
-          className="btn-accent" 
+          className="btn-accent"
           data-testid="create-event-button"
         >
           <Plus className="w-5 h-5 mr-2" />
@@ -120,7 +123,7 @@ const AdminDashboard = () => {
             <div className="text-3xl font-heading font-bold">
               {stats.activeEvents}
             </div>
-            <button 
+            <button
               onClick={() => navigate('/admin/under-construction')}
               className="text-xs text-indigo-100 hover:underline mt-1 inline-block"
             >
@@ -264,10 +267,10 @@ const AdminDashboard = () => {
                 </CardTitle>
                 <CardDescription>Latest event activities</CardDescription>
               </div>
-              <Button 
+              <Button
                 onClick={() => navigate('/admin/under-construction')}
-                variant="outline" 
-                size="sm" 
+                variant="outline"
+                size="sm"
                 className="border-[#3F51B5] text-[#3F51B5]"
               >
                 View All

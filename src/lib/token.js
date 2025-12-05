@@ -29,7 +29,7 @@ export const getUserData = () => {
 export const setUserData = (data) => {
   // Store full response data
   localStorage.setItem("userData", JSON.stringify(data));
-  
+
   // Also store user and admin separately if they exist
   if (data.user) {
     localStorage.setItem("user", JSON.stringify(data.user));
@@ -52,7 +52,7 @@ export const getUser = () => {
 export const isTokenValid = () => {
   const token = getToken();
   if (!token) return false;
-  
+
   try {
     // Basic token validation - you can enhance this with JWT decoding if needed
     const parts = token.split('.');
@@ -71,7 +71,7 @@ export const decodeToken = (token) => {
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
-    
+
     const payload = parts[1];
     const decoded = JSON.parse(atob(payload));
     return decoded;
@@ -88,12 +88,28 @@ export const decodeToken = (token) => {
 export const getRoleFromToken = () => {
   const token = getToken();
   if (!token) return null;
-  
+
   const decoded = decodeToken(token);
   if (decoded && decoded.role) {
     return decoded.role;
   }
-  
+
   // Fallback to stored role
   return getUserRole();
+};
+
+export const updateUser = (user) => {
+  localStorage.setItem("user", JSON.stringify(user));
+  // Also update the main userData object if it exists
+  const userData = getUserData() || {};
+  userData.user = user;
+  localStorage.setItem("userData", JSON.stringify(userData));
+};
+
+export const updateAdmin = (admin) => {
+  localStorage.setItem("adminData", JSON.stringify(admin));
+  // Also update the main userData object if it exists
+  const userData = getUserData() || {};
+  userData.admin = admin;
+  localStorage.setItem("userData", JSON.stringify(userData));
 };

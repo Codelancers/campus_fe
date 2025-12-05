@@ -23,6 +23,7 @@ import {
   Trophy,
   GraduationCap,
 } from 'lucide-react';
+import { getUser } from '@/lib/token';
 
 const navigation = [
   { name: 'Dashboard', href: '/student', icon: Home },
@@ -36,14 +37,17 @@ const StudentLayout = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Mock user data
-  const user = {
-    name: 'John Doe',
-    email: 'john@college.edu',
-    branch: 'Computer Science',
-    points: 48,
-    avatar: null,
-  };
+  // Get user data from local storage
+  const [user] = useState(() => {
+    const storedUser = getUser();
+    return storedUser || {
+      name: 'Student',
+      email: 'student@college.edu',
+      branch: 'General',
+      points: 0,
+      avatar: null,
+    };
+  });
 
   const handleLogout = () => {
     navigate('/login');
@@ -67,11 +71,10 @@ const StudentLayout = () => {
           <button
             key={item.name}
             onClick={() => handleNavigation(item.href, mobile)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 w-full text-left ${
-              isActive
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 w-full text-left ${isActive
                 ? 'bg-[#3F51B5] text-white shadow-md'
                 : 'text-gray-700 hover:bg-gray-100'
-            }`}
+              }`}
             data-testid={`nav-${item.name.toLowerCase()}`}
           >
             <item.icon className="w-5 h-5" />
@@ -135,7 +138,7 @@ const StudentLayout = () => {
             {/* Points Badge */}
             <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#CDDC39] to-[#C0CA33] rounded-full shadow-md">
               <Trophy className="w-5 h-5 text-gray-900" />
-              <span className="font-bold text-gray-900">{user.points} Points</span>
+              <span className="font-bold text-gray-900">{user.points || 0} Points</span>
             </div>
 
             {/* User Menu */}
@@ -149,7 +152,7 @@ const StudentLayout = () => {
                   <Avatar className="h-10 w-10 border-2 border-[#3F51B5]">
                     <AvatarImage src={user.avatar} alt={user.name} />
                     <AvatarFallback className="bg-[#3F51B5] text-white font-semibold">
-                      {user.name.split(' ').map(n => n[0]).join('')}
+                      {user.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2) : 'S'}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -159,7 +162,7 @@ const StudentLayout = () => {
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-semibold text-[#333333]">{user.name}</p>
                     <p className="text-xs text-gray-500">{user.email}</p>
-                    <p className="text-xs text-[#009688] font-medium">{user.branch}</p>
+                    <p className="text-xs text-[#009688] font-medium">{user.department || user.branch}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -194,11 +197,10 @@ const StudentLayout = () => {
                 <button
                   key={item.name}
                   onClick={() => handleNavigation(item.href)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-all duration-200 ${
-                    isActive
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-all duration-200 ${isActive
                       ? 'bg-[#3F51B5] text-white'
                       : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                    }`}
                   data-testid={`desktop-nav-${item.name.toLowerCase()}`}
                 >
                   <item.icon className="w-4 h-4" />
