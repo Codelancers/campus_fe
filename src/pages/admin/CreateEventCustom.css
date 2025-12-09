@@ -1,0 +1,103 @@
+/* Custom styles for React Calendar in CreateEvent page */
+.react-calendar {
+  width: 350px;
+  max-width: 100%;
+  background: white;
+  border: 1px solid #e2e8f0;
+  font-family: inherit;
+  line-height: 1.125em;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 0.5rem;
+}
+
+.react-calendar__navigation button {
+  min-width: 44px;
+  background: none;
+  font-size: 16px;
+  margin-top: 8px;
+}
+
+.react-calendar__navigation button:enabled:hover,
+.react-calendar__navigation button:enabled:focus {
+  background-color: #f8fafc;
+}
+
+.react-calendar__month-view__weekdays {
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: bold;
+  font-size: 0.75em;
+  color: #64748b;
+}
+
+.react-calendar__tile {
+  max-width: 100%;
+  padding: 10px 6.6667px;
+  background: none;
+  text-align: center;
+  line-height: 16px;
+}
+
+.react-calendar__tile:enabled:hover,
+.react-calendar__tile:enabled:focus {
+  background-color: #f1f5f9;
+  border-radius: 0.375rem;
+  color: #0f172a;
+}
+
+.react-calendar__tile--now {
+  background: #e0e7ff;
+  border-radius: 0.375rem;
+  color: #4338ca;
+}
+
+.react-calendar__tile--now:enabled:hover,
+.react-calendar__tile--now:enabled:focus {
+  background: #c7d2fe;
+}
+
+.react-calendar__tile--active {
+  background: #4f46e5;
+  color: white;
+  border-radius: 0.375rem;
+}
+
+.react-calendar__tile--active:enabled:hover,
+.react-calendar__tile--active:enabled:focus {
+  background: #4338ca;
+}
+
+/* Time Picker Customization */
+.custom-time-picker-wrapper .react-time-picker {
+  width: 100%;
+  display: flex !important;
+}
+
+.custom-time-picker-wrapper .react-time-picker__wrapper {
+  border: none;
+  width: 100%;
+}
+
+.custom-time-picker-wrapper .react-time-picker__inputGroup {
+  padding: 0 8px;
+  min-width: auto;
+}
+
+.custom-time-picker-wrapper .react-time-picker__inputGroup__input {
+  outline: none;
+  color: #0f172a;
+}
+
+.custom-time-picker-wrapper .react-time-picker__inputGroup__divider {
+  color: #64748b;
+}
+
+.custom-time-picker-wrapper .react-time-picker__clear-button {
+  display: none; /* We configured clearIcon={null} but just in case */
+}
+
+/* Hide default borders of the library components since we wrap them */
+.react-time-picker__wrapper {
+  border: none !important;
+}

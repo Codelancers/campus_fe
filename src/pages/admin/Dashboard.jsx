@@ -72,7 +72,7 @@ const AdminDashboard = () => {
           </p>
         </div>
         <Button
-          onClick={() => navigate('/admin/under-construction')}
+          onClick={() => navigate('/admin/events/create')}
           className="btn-accent"
           data-testid="create-event-button"
         >
@@ -124,7 +124,7 @@ const AdminDashboard = () => {
               {stats.activeEvents}
             </div>
             <button
-              onClick={() => navigate('/admin/under-construction')}
+              onClick={() => navigate('/admin/events')}
               className="text-xs text-indigo-100 hover:underline mt-1 inline-block"
             >
               Manage events →
