@@ -31,24 +31,24 @@ const AdminOTPVerification = () => {
     try {
       // Log the request data for debugging
       console.log('Verifying admin OTP:', { email, otp, otpType: typeof otp });
-      
+
       const response = await verifyAdminOTP(email, otp);
-      
+
       console.log('Admin OTP verification response:', response);
       console.log('Response status:', response.status);
-      
+
       // Check if status is 200 (success)
       if (response.status === 200) {
         // Extract response data - handle both string token and object response
         let responseData = response.responseData || response;
         let token = response.token || responseData?.token;
-        
+
         // If response is a string (direct token)
         if (typeof responseData === 'string') {
           token = responseData;
           responseData = { token: responseData };
         }
-        
+
         if (!token) {
           console.error('No token in response:', response);
           throw new Error('No token received from server');
@@ -57,7 +57,7 @@ const AdminOTPVerification = () => {
         // Check if roles array contains "ADMIN"
         const roles = responseData?.roles || responseData?.admin?.roles || [];
         const hasAdminRole = Array.isArray(roles) && roles.includes('ADMIN');
-        
+
         if (!hasAdminRole) {
           toast.error('These are not admin credentials. Please use admin login.');
           setLoading(false);
@@ -90,10 +90,10 @@ const AdminOTPVerification = () => {
       console.error('Verify OTP error:', error);
       console.error('Error response:', error.response);
       console.error('Error data:', error.response?.data);
-      
+
       // Handle different error formats
       let errorMessage = 'Invalid OTP. Please try again.';
-      
+
       if (error.message) {
         // Check if it's "admin not found" error
         if (error.message.toLowerCase().includes('admin not found')) {
@@ -116,7 +116,7 @@ const AdminOTPVerification = () => {
           errorMessage = error.response.data.error;
         }
       }
-      
+
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -150,20 +150,21 @@ const AdminOTPVerification = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex justify-center">
+            <div className="flex justify-center py-4">
               <InputOTP
                 maxLength={6}
                 value={otp}
                 onChange={setOtp}
                 data-testid="otp-input"
               >
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} className="w-12 h-14 text-xl" />
-                  <InputOTPSlot index={1} className="w-12 h-14 text-xl" />
-                  <InputOTPSlot index={2} className="w-12 h-14 text-xl" />
-                  <InputOTPSlot index={3} className="w-12 h-14 text-xl" />
-                  <InputOTPSlot index={4} className="w-12 h-14 text-xl" />
-                  <InputOTPSlot index={5} className="w-12 h-14 text-xl" />
+                <InputOTPGroup className="gap-3">
+                  {[0, 1, 2, 3, 4, 5].map((index) => (
+                    <InputOTPSlot
+                      key={index}
+                      index={index}
+                      className="w-12 h-14 text-2xl font-bold border-2 border-gray-200 bg-white rounded-xl focus:border-[#3F51B5] focus:ring-4 focus:ring-[#3F51B5]/10 shadow-sm transition-all duration-200 first:rounded-xl last:rounded-xl"
+                    />
+                  ))}
                 </InputOTPGroup>
               </InputOTP>
             </div>

@@ -25,12 +25,12 @@ const OTPVerification = () => {
 
     try {
       const response = await verifyUserOTP(email, otp);
-      
+
       console.log('Student OTP verification response:', response);
-      
+
       // Extract response data
       const responseData = response.responseData || response;
-      
+
       // Store JWT token
       const token = response.token || responseData?.token;
       if (!token) {
@@ -40,7 +40,7 @@ const OTPVerification = () => {
       // Check if roles array contains "STUDENT"
       const roles = responseData?.roles || responseData?.user?.roles || [];
       const hasStudentRole = Array.isArray(roles) && roles.includes('STUDENT');
-      
+
       if (!hasStudentRole) {
         toast.error('These are not student credentials. Please use student login.');
         setLoading(false);
@@ -70,10 +70,10 @@ const OTPVerification = () => {
       console.error('Verify OTP error:', error);
       console.error('Error response:', error.response);
       console.error('Error data:', error.response?.data);
-      
+
       // Handle different error formats
       let errorMessage = 'Invalid OTP. Please try again.';
-      
+
       if (error.message) {
         // Check if it's "user not found" error
         if (error.message.toLowerCase().includes('user not found')) {
@@ -96,7 +96,7 @@ const OTPVerification = () => {
           errorMessage = error.response.data.error;
         }
       }
-      
+
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -130,20 +130,21 @@ const OTPVerification = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex justify-center">
+            <div className="flex justify-center py-4">
               <InputOTP
                 maxLength={6}
                 value={otp}
                 onChange={setOtp}
                 data-testid="otp-input"
               >
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} className="w-12 h-14 text-xl" />
-                  <InputOTPSlot index={1} className="w-12 h-14 text-xl" />
-                  <InputOTPSlot index={2} className="w-12 h-14 text-xl" />
-                  <InputOTPSlot index={3} className="w-12 h-14 text-xl" />
-                  <InputOTPSlot index={4} className="w-12 h-14 text-xl" />
-                  <InputOTPSlot index={5} className="w-12 h-14 text-xl" />
+                <InputOTPGroup className="gap-3">
+                  {[0, 1, 2, 3, 4, 5].map((index) => (
+                    <InputOTPSlot
+                      key={index}
+                      index={index}
+                      className="w-12 h-14 text-2xl font-bold border-2 border-gray-200 bg-white rounded-xl focus:border-[#3F51B5] focus:ring-4 focus:ring-[#3F51B5]/10 shadow-sm transition-all duration-200 first:rounded-xl last:rounded-xl"
+                    />
+                  ))}
                 </InputOTPGroup>
               </InputOTP>
             </div>

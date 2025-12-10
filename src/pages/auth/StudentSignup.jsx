@@ -5,19 +5,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { User, Mail, Phone, GraduationCap, ArrowRight } from 'lucide-react';
+import { User, Mail, Phone, GraduationCap, ArrowRight, BookOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import { registerUser } from '@/lib/api';
 import { setUserData } from '@/lib/token';
 
 const BRANCHES = [
-  'Computer Science',
-  'Information Technology',
-  'Electronics & Communication',
-  'Mechanical Engineering',
-  'Civil Engineering',
-  'Electrical Engineering',
-  'Chemical Engineering',
+  'CSE',
+  'ECE',
+  'EEE',
+  'ME',
+  'CE',
+  'CSE-ALLIED BRANCHES',
 ];
 
 const YEARS = [
@@ -32,6 +31,7 @@ const StudentSignup = () => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
+    rollNo: '',
     email: '',
     phone: '',
     branch: '',
@@ -51,8 +51,8 @@ const StudentSignup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!formData.name || !formData.email || !formData.phone || !formData.branch || !formData.year) {
+
+    if (!formData.name || !formData.rollNo || !formData.email || !formData.phone || !formData.branch || !formData.year) {
       toast.error('Please fill all required fields');
       return;
     }
@@ -65,20 +65,21 @@ const StudentSignup = () => {
 
     setLoading(true);
     try {
-      // Map branch to department (assuming branch is the department)
+      // Map branch to department
       const registrationData = {
         name: formData.name,
+        rollNo: formData.rollNo, // Sending Roll No
         email: formData.email,
         phone: formData.phone,
-        department: formData.branch,
-        year: parseInt(formData.year), // Convert to number
+        department: formData.branch, // Sending simplified branch code/name
+        year: parseInt(formData.year),
       };
 
       const response = await registerUser(registrationData);
-      
+
       // Store the response body in localStorage
       setUserData(response);
-      
+
       toast.success('Account created! OTP sent to your email.');
       navigate('/verify-otp', { state: { email: formData.email } });
     } catch (error) {
@@ -117,23 +118,44 @@ const StudentSignup = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Name */}
-              <div className="space-y-2">
-                <Label htmlFor="name" className="text-sm font-semibold text-[#333333]">
-                  Full Name *
-                </Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="John Doe"
-                    value={formData.name}
-                    onChange={(e) => handleChange('name', e.target.value)}
-                    className="pl-11 h-11 bg-gray-50 border-gray-200 focus:border-[#3F51B5] focus:ring-2 focus:ring-[#3F51B5]/20"
-                    data-testid="name-input"
-                    required
-                  />
+              {/* Name & Roll No */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-sm font-semibold text-[#333333]">
+                    Full Name *
+                  </Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Input
+                      id="name"
+                      type="text"
+                      placeholder="John Doe"
+                      value={formData.name}
+                      onChange={(e) => handleChange('name', e.target.value)}
+                      className="pl-11 h-11 bg-gray-50 border-gray-200 focus:border-[#3F51B5] focus:ring-2 focus:ring-[#3F51B5]/20"
+                      data-testid="name-input"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="rollNo" className="text-sm font-semibold text-[#333333]">
+                    Roll Number *
+                  </Label>
+                  <div className="relative">
+                    <BookOpen className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Input
+                      id="rollNo"
+                      type="text"
+                      placeholder="21CHDJ3456"
+                      value={formData.rollNo}
+                      onChange={(e) => handleChange('rollNo', e.target.value)}
+                      className="pl-11 h-11 bg-gray-50 border-gray-200 focus:border-[#3F51B5] focus:ring-2 focus:ring-[#3F51B5]/20 uppercase"
+                      data-testid="roll-no-input"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -187,7 +209,7 @@ const StudentSignup = () => {
                   </Label>
                   <Select value={formData.branch} onValueChange={(value) => handleChange('branch', value)}>
                     <SelectTrigger className="h-11 bg-gray-50 border-gray-200" data-testid="branch-select">
-                      <SelectValue placeholder="Select your branch" />
+                      <SelectValue placeholder="Select Branch" />
                     </SelectTrigger>
                     <SelectContent>
                       {BRANCHES.map((branch) => (
@@ -205,7 +227,7 @@ const StudentSignup = () => {
                   </Label>
                   <Select value={formData.year} onValueChange={(value) => handleChange('year', value)}>
                     <SelectTrigger className="h-11 bg-gray-50 border-gray-200" data-testid="year-select">
-                      <SelectValue placeholder="Select your year" />
+                      <SelectValue placeholder="Select Year" />
                     </SelectTrigger>
                     <SelectContent>
                       {YEARS.map((year) => (
