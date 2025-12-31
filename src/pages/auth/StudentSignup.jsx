@@ -34,12 +34,17 @@ const StudentSignup = () => {
     rollNo: '',
     email: '',
     phone: '',
-    branch: '',
+    department: '', // Changed from branch to department for consistency
     year: '',
   });
 
   const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    // If field is rollNo, force uppercase to match DB/standard format
+    if (field === 'rollNo') {
+      setFormData(prev => ({ ...prev, [field]: value.toUpperCase() }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   const handlePhoneChange = (e) => {
@@ -52,7 +57,7 @@ const StudentSignup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.rollNo || !formData.email || !formData.phone || !formData.branch || !formData.year) {
+    if (!formData.name || !formData.rollNo || !formData.email || !formData.phone || !formData.department || !formData.year) {
       toast.error('Please fill all required fields');
       return;
     }
@@ -65,17 +70,21 @@ const StudentSignup = () => {
 
     setLoading(true);
     try {
-      // Map branch to department
+      // Explicitly construct the payload to match the backend expectation exactly
       const registrationData = {
-        name: formData.name,
-        rollNo: formData.rollNo, // Sending Roll No
-        email: formData.email,
-        phone: formData.phone,
-        department: formData.branch, // Sending simplified branch code/name
-        year: parseInt(formData.year),
+        name: formData.name.trim(),
+        rollNo: formData.rollNo.trim().toUpperCase(), // Ensure Roll No is sent as 'rollNo'
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        department: formData.department, // Mapped correctly
+        year: parseInt(formData.year), // Ensure number
       };
 
+      console.log('Sending Registration Payload:', JSON.stringify(registrationData, null, 2));
+
       const response = await registerUser(registrationData);
+
+      console.log('Registration Response:', response);
 
       // Store the response body in localStorage
       setUserData(response);
@@ -128,6 +137,7 @@ const StudentSignup = () => {
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <Input
                       id="name"
+                      name="name"
                       type="text"
                       placeholder="John Doe"
                       value={formData.name}
@@ -147,8 +157,9 @@ const StudentSignup = () => {
                     <BookOpen className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <Input
                       id="rollNo"
+                      name="rollNo"
                       type="text"
-                      placeholder="21CHDJ3456"
+                      placeholder="21BQ1A42A1"
                       value={formData.rollNo}
                       onChange={(e) => handleChange('rollNo', e.target.value)}
                       className="pl-11 h-11 bg-gray-50 border-gray-200 focus:border-[#3F51B5] focus:ring-2 focus:ring-[#3F51B5]/20 uppercase"
@@ -169,6 +180,7 @@ const StudentSignup = () => {
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <Input
                       id="email"
+                      name="email"
                       type="email"
                       placeholder="you@college.edu"
                       value={formData.email}
@@ -188,6 +200,7 @@ const StudentSignup = () => {
                     <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <Input
                       id="phone"
+                      name="phone"
                       type="tel"
                       placeholder="9876543210"
                       value={formData.phone}
@@ -204,10 +217,10 @@ const StudentSignup = () => {
               {/* Branch & Year */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-2">
-                  <Label htmlFor="branch" className="text-sm font-semibold text-[#333333]">
+                  <Label htmlFor="department" className="text-sm font-semibold text-[#333333]">
                     Branch *
                   </Label>
-                  <Select value={formData.branch} onValueChange={(value) => handleChange('branch', value)}>
+                  <Select value={formData.department} onValueChange={(value) => handleChange('department', value)}>
                     <SelectTrigger className="h-11 bg-gray-50 border-gray-200" data-testid="branch-select">
                       <SelectValue placeholder="Select Branch" />
                     </SelectTrigger>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,13 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Upload, Calendar as CalendarIcon, Clock } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ArrowLeft, Upload, Calendar as CalendarIcon, Clock, Type as TypeIcon, FileText, Tag, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import Calendar from 'react-calendar';
 import TimePicker from 'react-time-picker';
 import 'react-calendar/dist/Calendar.css';
 import 'react-time-picker/dist/TimePicker.css';
-import 'react-clock/dist/Clock.css';
+// import 'react-clock/dist/Clock.css'; // Removed as react-clock is not in package.json
 import { createEvent } from '@/lib/api';
 import './CreateEventCustom.css';
 
@@ -26,18 +27,25 @@ const CreateEvent = () => {
     venue: '',
     maxParticipantsSelection: '', // For the dropdown logic
     maxParticipantsCustom: '',
-    coverImageUrl: '',
+    skillTags: '',
+    requirements: '',
+    eventType: '0', // Default '0' for Technical
+    poster: null,   // Stores the File object
   });
+
+  const [posterPreview, setPosterPreview] = useState('');
 
   // Date and Time states
   const [startDate, setStartDate] = useState(new Date());
   const [startTime, setStartTime] = useState('10:00');
   const [endDate, setEndDate] = useState(new Date());
   const [endTime, setEndTime] = useState('12:00');
+  const [registrationEndDate, setRegistrationEndDate] = useState(new Date());
 
   // UI States for Calendar popups
   const [showStartCalendar, setShowStartCalendar] = useState(false);
   const [showEndCalendar, setShowEndCalendar] = useState(false);
+  const [showRegEndCalendar, setShowRegEndCalendar] = useState(false);
 
   const departments = [
     { value: 'cse', label: 'CSE' },
@@ -60,12 +68,25 @@ const CreateEvent = () => {
         return;
       }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData((prev) => ({ ...prev, coverImageUrl: reader.result }));
-      };
-      reader.readAsDataURL(file);
+      // Store file object for FormData
+      setFormData((prev) => ({ ...prev, poster: file }));
+
+      // Create preview URL
+      const objectUrl = URL.createObjectURL(file);
+      setPosterPreview(objectUrl);
+
+      // Note: In a real app, we should cleanup this URL using useEffect or when component unmounts
+      // but for this simple interaction, relying on browser cleanup is acceptable or we can add useEffect.
     }
+  };
+
+  // Helper to format date as YYYY-MM-DD
+  const formatDateForApi = (date) => {
+    if (!date) return null;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const handleSubmit = async (e) => {
@@ -86,7 +107,6 @@ const CreateEvent = () => {
       }
 
       // 2. Construct Date Objects
-      // Combine Date and Time
       const combineDateAndTime = (dateObj, timeString) => {
         if (!dateObj || !timeString) return null;
         const [hours, minutes] = timeString.split(':').map(Number);
@@ -95,7 +115,7 @@ const CreateEvent = () => {
         newDate.setMinutes(minutes);
         newDate.setSeconds(0);
         newDate.setMilliseconds(0);
-        return newDate.toISOString(); // Returns string like 2025-12-25T03:30:00.000Z
+        return newDate.toISOString();
       };
 
       const startDateTimeIso = combineDateAndTime(startDate, startTime);
@@ -121,20 +141,34 @@ const CreateEvent = () => {
         return;
       }
 
-      // 4. API Payload
-      const payload = {
-        title: formData.title,
-        description: formData.description,
-        department: formData.department,
-        venue: formData.venue,
-        startTime: startDateTimeIso,
-        endTime: endDateTimeIso,
-        maxParticipants: maxParticipantsVal,
-        coverImageUrl: formData.coverImageUrl, // Base64 string
-      };
+      // 4. Construct FormData Payload
+      const data = new FormData();
+      data.append('title', formData.title);
+      data.append('description', formData.description);
+      data.append('department', formData.department);
+      data.append('venue', formData.venue);
+      data.append('startTime', startDateTimeIso);
+      data.append('endTime', endDateTimeIso);
+      data.append('maxParticipants', maxParticipantsVal);
+      data.append('skillTags', formData.skillTags);
+      data.append('requirements', formData.requirements);
+      data.append('registrationEndDate', formatDateForApi(registrationEndDate));
+      data.append('eventType', formData.eventType);
+
+      if (formData.poster) {
+        data.append('poster', formData.poster);
+      }
+
+      console.log("Creating Event FormData Payload");
+      // Debug log
+      for (let pair of data.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+      }
 
       // 5. Call API
-      await createEvent(creatorId, payload);
+      // Since we are sending FormData, createEvent needs to handle it correctly.
+      // Axios usually detects FormData and sets headers.
+      await createEvent(creatorId, data);
 
       toast.success('Event created successfully!');
       navigate('/admin/events');
@@ -190,10 +224,40 @@ const CreateEvent = () => {
                   required
                 />
               </div>
+
+              {/* Requirements & Skill Tags */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <Label htmlFor="requirements" className="text-sm font-medium flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    Requirements
+                  </Label>
+                  <Textarea
+                    id="requirements"
+                    value={formData.requirements}
+                    onChange={(e) => handleInputChange('requirements', e.target.value)}
+                    placeholder="Laptop, ID Card, etc."
+                    className="min-h-[80px] bg-white dark:bg-slate-950 border-slate-200"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="skillTags" className="text-sm font-medium flex items-center gap-2">
+                    <Tag className="w-4 h-4" />
+                    Skill Tags
+                  </Label>
+                  <Input
+                    id="skillTags"
+                    value={formData.skillTags}
+                    onChange={(e) => handleInputChange('skillTags', e.target.value)}
+                    placeholder="Java, Python, Public Speaking (Comma separated)"
+                    className="h-12 bg-white dark:bg-slate-950 border-slate-200"
+                  />
+                </div>
+              </div>
             </div>
 
-            {/* Department & Venue */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Department, Venue, Event Type */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="department" className="text-sm font-medium">Department <span className="text-red-500">*</span></Label>
                 <Select value={formData.department} onValueChange={(val) => handleInputChange('department', val)} required>
@@ -221,16 +285,39 @@ const CreateEvent = () => {
                   required
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium flex items-center gap-2">
+                  <TypeIcon className="w-4 h-4" />
+                  Event Type <span className="text-red-500">*</span>
+                </Label>
+                <div className="bg-white dark:bg-slate-950 border border-slate-200 rounded-lg p-2 h-12 flex items-center">
+                  <RadioGroup
+                    value={formData.eventType}
+                    onValueChange={(val) => handleInputChange('eventType', val)}
+                    className="flex items-center space-x-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="0" id="technical" />
+                      <Label htmlFor="technical" className="cursor-pointer">Technical</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="1" id="cultural" />
+                      <Label htmlFor="cultural" className="cursor-pointer">Cultural</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              </div>
             </div>
 
             {/* Date & Time Section */}
             <div className="p-6 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 space-y-6">
               <h3 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <Clock className="w-5 h-5 text-indigo-500" />
-                Schedule
+                Schedule & Registration
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Start Time */}
                 <div className="space-y-4">
                   <Label className="text-sm font-medium">Start Date & Time <span className="text-red-500">*</span></Label>
@@ -298,6 +385,32 @@ const CreateEvent = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Registration End Date */}
+                <div className="space-y-4">
+                  <Label className="text-sm font-medium">Registration Deadline <span className="text-red-500">*</span></Label>
+                  <div className="relative">
+                    <div
+                      className="flex items-center h-12 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer hover:bg-slate-50"
+                      onClick={() => setShowRegEndCalendar(!showRegEndCalendar)}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
+                      {registrationEndDate ? formatDateForApi(registrationEndDate) : <span>Pick deadline</span>}
+                    </div>
+                    {showRegEndCalendar && (
+                      <div className="absolute z-10 mt-1 bg-white border rounded-lg shadow-lg p-2 right-0">
+                        <Calendar
+                          onChange={(date) => { setRegistrationEndDate(date); setShowRegEndCalendar(false); }}
+                          value={registrationEndDate}
+                          className="rounded-md border-none"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div className="h-12 flex items-center text-xs text-slate-500 italic">
+                    Participants cannot register after this date.
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -333,10 +446,13 @@ const CreateEvent = () => {
               </div>
             </div>
 
-            {/* Cover Image Upload */}
+            {/* Poster Upload (Only 1 image field now) */}
             <div className="space-y-4">
-              <Label className="text-sm font-medium">Event Cover Image <span className="text-red-500">*</span></Label>
-              <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-8 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors flex flex-col items-center justify-center text-center group cursor-pointer relative overflow-hidden">
+              <Label className="text-sm font-medium flex items-center gap-2">
+                <ImageIcon className="w-4 h-4" />
+                Event Poster <span className="text-red-500">*</span>
+              </Label>
+              <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-8 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors flex flex-col items-center justify-center text-center group cursor-pointer relative overflow-hidden h-64">
                 <Input
                   type="file"
                   accept=".png, .jpg, .jpeg"
@@ -344,24 +460,24 @@ const CreateEvent = () => {
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
                 />
 
-                {formData.coverImageUrl ? (
-                  <div className="relative z-10 w-full flex justify-center">
+                {posterPreview ? (
+                  <div className="relative z-10 w-full h-full flex justify-center items-center">
                     <img
-                      src={formData.coverImageUrl}
-                      alt="Cover Preview"
-                      className="max-h-64 rounded-lg shadow-md object-cover"
+                      src={posterPreview}
+                      alt="Poster Preview"
+                      className="max-h-full max-w-full rounded-lg shadow-md object-contain"
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg text-white font-medium">
-                      Click to Change
+                      Change Poster
                     </div>
                   </div>
                 ) : (
                   <>
-                    <div className="h-14 w-14 rounded-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <div className="h-14 w-14 rounded-full bg-purple-50 dark:bg-purple-900/20 text-purple-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                       <Upload className="w-7 h-7" />
                     </div>
-                    <p className="text-slate-900 dark:text-white font-medium">Click to upload or drag and drop</p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">PNG, JPG up to 5MB</p>
+                    <p className="text-slate-900 dark:text-white font-medium">Event Poster</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">PNG, JPG (Required)</p>
                   </>
                 )}
               </div>

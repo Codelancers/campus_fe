@@ -15,14 +15,16 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     // Don't add token for auth endpoints (login, register, OTP)
-    const isAuthEndpoint = config.url?.includes('/otp') || 
-                          config.url?.includes('/verify') || 
-                          config.url?.includes('/register');
-    
+    const isAuthEndpoint = config.url?.includes('/otp') ||
+      config.url?.includes('/verify') ||
+      config.url?.includes('/register');
+
     if (!isAuthEndpoint) {
-      const token = localStorage.getItem('token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      if (!config.headers.Authorization) {
+        const token = localStorage.getItem('token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
       }
     }
     return config;
@@ -70,7 +72,7 @@ export const registerUser = async (userData) => {
 export const sendUserOTP = async (email) => {
   try {
     const response = await api.post('/api/users/otp', { email });
-    
+
     // Handle string response (like "user not found")
     if (typeof response.data === 'string') {
       const lowerData = response.data.toLowerCase();
@@ -78,7 +80,7 @@ export const sendUserOTP = async (email) => {
         throw new Error('User not found');
       }
     }
-    
+
     return response.data;
   } catch (error) {
     // Handle string error responses
@@ -108,12 +110,12 @@ export const verifyUserOTP = async (email, otp) => {
     email: email.trim(),
     otp: String(otp).trim(),
   };
-  
+
   console.log('User OTP Verification Request:', requestBody);
-  
+
   try {
     const response = await api.post('/api/users/verify', requestBody);
-    
+
     // Handle string response (like "user not found")
     if (typeof response.data === 'string') {
       const lowerData = response.data.toLowerCase();
@@ -121,7 +123,7 @@ export const verifyUserOTP = async (email, otp) => {
         throw new Error('User not found');
       }
     }
-    
+
     // Return full response with status and data
     return {
       token: response.data?.token || response.data, // Extracted token
@@ -178,7 +180,7 @@ export const registerAdmin = async (adminData) => {
 export const sendAdminOTP = async (email) => {
   try {
     const response = await api.post('/api/admins/otp', { email });
-    
+
     // Handle string response (like "admin not found")
     if (typeof response.data === 'string') {
       const lowerData = response.data.toLowerCase();
@@ -186,7 +188,7 @@ export const sendAdminOTP = async (email) => {
         throw new Error('Admin not found');
       }
     }
-    
+
     return response.data;
   } catch (error) {
     // Handle string error responses
@@ -216,12 +218,12 @@ export const verifyAdminOTP = async (email, otp) => {
     email: email.trim(),
     otp: String(otp).trim(),
   };
-  
+
   console.log('Admin OTP Verification Request:', requestBody);
-  
+
   try {
     const response = await api.post('/api/admins/verify', requestBody);
-    
+
     // Handle string response (like "admin not found")
     if (typeof response.data === 'string') {
       const lowerData = response.data.toLowerCase();
@@ -229,15 +231,15 @@ export const verifyAdminOTP = async (email, otp) => {
         throw new Error('Admin not found');
       }
     }
-    
+
     // Handle both cases:
     // 1. Response is a token string directly: "eyJhbGciOiJIUzI1NiJ9..."
     // 2. Response is an object: { token: "...", admin: {...}, roles: [...] }
     const responseData = response.data;
-    const token = typeof responseData === 'string' 
-      ? responseData 
+    const token = typeof responseData === 'string'
+      ? responseData
       : (responseData?.token || responseData);
-    
+
     // Return full response with status and data
     return {
       token: token, // Extracted token
@@ -291,7 +293,11 @@ export const deleteUser = async (userId) => {
  * @returns {Promise} API response
  */
 export const createEvent = async (adminId, eventData) => {
-  const response = await api.post(`/api/events?creatorId=${adminId}`, eventData);
+  const response = await api.post(`/api/events?creatorId=${adminId}`, eventData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
   return response.data;
 };
 
