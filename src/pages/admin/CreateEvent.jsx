@@ -95,8 +95,10 @@ const CreateEvent = () => {
 
     try {
       // 1. Get Creator ID from localStorage
+      // 1. Get Creator ID from localStorage
       const adminDataString = localStorage.getItem('adminData');
-      let creatorId = "69301a6666cd6771b2183db6"; // Default/Fallback
+      let creatorId = null;
+
       if (adminDataString) {
         try {
           const adminData = JSON.parse(adminDataString);
@@ -104,6 +106,12 @@ const CreateEvent = () => {
         } catch (err) {
           console.error("Error parsing adminData", err);
         }
+      }
+
+      if (!creatorId) {
+        toast.error('Authentication Error: You must be logged in as an admin.');
+        setLoading(false);
+        return;
       }
 
       // 2. Construct Date Objects

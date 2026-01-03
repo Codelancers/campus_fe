@@ -23,7 +23,7 @@ const AdminSignup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.name || !formData.email) {
       toast.error('Please fill all required fields');
       return;
@@ -37,10 +37,10 @@ const AdminSignup = () => {
       };
 
       const response = await registerAdmin(registrationData);
-      
+
       // Store the response body in localStorage
       setUserData(response);
-      
+
       toast.success('Account created! OTP sent to your email.');
       navigate('/admin123/verify-otp', { state: { email: formData.email } });
     } catch (error) {
@@ -56,8 +56,8 @@ const AdminSignup = () => {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8" data-testid="admin-signup-header">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-lg mb-4">
-            <Shield className="w-10 h-10 text-[#3F51B5]" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 overflow-hidden">
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-4xl font-heading font-bold text-white mb-2">
             Admin Portal

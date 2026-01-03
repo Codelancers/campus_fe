@@ -104,8 +104,8 @@ const StudentSignup = () => {
       <div className="w-full max-w-2xl">
         {/* Header */}
         <div className="text-center mb-8" data-testid="signup-header">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-lg mb-4">
-            <GraduationCap className="w-10 h-10 text-[#3F51B5]" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 overflow-hidden">
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-4xl font-heading font-bold text-white mb-2">
             Join Campus Events

@@ -54,12 +54,7 @@ const AdminLayout = () => {
 
   const handleNavigation = (href, mobile = false) => {
     if (mobile) setMobileMenuOpen(false);
-    // Redirect all navigation except dashboard to under construction
-    if (href !== '/admin') {
-      navigate('/admin/under-construction');
-    } else {
-      navigate(href);
-    }
+    navigate(href);
   };
 
   const NavItems = ({ mobile = false }) => (
@@ -71,8 +66,8 @@ const AdminLayout = () => {
             key={item.name}
             onClick={() => handleNavigation(item.href, mobile)}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 w-full text-left ${isActive
-                ? 'bg-[#3F51B5] text-white shadow-md'
-                : 'text-gray-700 hover:bg-gray-100'
+              ? 'bg-[#3F51B5] text-white shadow-md'
+              : 'text-gray-700 hover:bg-gray-100'
               }`}
             data-testid={`admin-nav-${item.name.toLowerCase()}`}
           >
@@ -101,8 +96,8 @@ const AdminLayout = () => {
                 <div className="flex flex-col h-full">
                   <div className="p-6 border-b bg-gradient-to-r from-[#3F51B5] to-[#5C6BC0]">
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg">
-                        <Shield className="w-6 h-6 text-[#3F51B5]" />
+                      <div className="flex items-center justify-center w-10 h-10 rounded-lg overflow-hidden bg-white/10 backdrop-blur-sm">
+                        <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
                       </div>
                       <div>
                         <h2 className="font-heading font-bold text-lg text-white">Campus Events</h2>
@@ -118,8 +113,8 @@ const AdminLayout = () => {
             </Sheet>
 
             <Link to="/admin" className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-[#3F51B5] to-[#5C6BC0] rounded-lg shadow-sm">
-                <Shield className="w-6 h-6 text-white" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg overflow-hidden">
+                <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
               </div>
               <div className="hidden sm:block">
                 <span className="font-heading font-bold text-xl text-[#333333]">
@@ -195,8 +190,8 @@ const AdminLayout = () => {
                   key={item.name}
                   onClick={() => handleNavigation(item.href)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-all duration-200 ${isActive
-                      ? 'bg-[#3F51B5] text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
+                    ? 'bg-[#3F51B5] text-white'
+                    : 'text-gray-700 hover:bg-gray-100'
                     }`}
                   data-testid={`admin-desktop-nav-${item.name.toLowerCase()}`}
                 >

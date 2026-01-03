@@ -14,18 +14,9 @@ const api = axios.create({
 // Request interceptor to add JWT token to headers
 api.interceptors.request.use(
   (config) => {
-    // Don't add token for auth endpoints (login, register, OTP)
-    const isAuthEndpoint = config.url?.includes('/otp') ||
-      config.url?.includes('/verify') ||
-      config.url?.includes('/register');
-
-    if (!isAuthEndpoint) {
-      if (!config.headers.Authorization) {
-        const token = localStorage.getItem('token');
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-      }
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -293,11 +284,7 @@ export const deleteUser = async (userId) => {
  * @returns {Promise} API response
  */
 export const createEvent = async (adminId, eventData) => {
-  const response = await api.post(`/api/events?creatorId=${adminId}`, eventData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+  const response = await api.post(`/api/events?creatorId=${adminId}`, eventData);
   return response.data;
 };
 

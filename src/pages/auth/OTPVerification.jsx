@@ -118,8 +118,8 @@ const OTPVerification = () => {
       <div className="w-full max-w-md">
         <Card className="shadow-2xl border-0" data-testid="otp-verification-card">
           <CardHeader className="space-y-1 pb-6">
-            <div className="flex items-center justify-center w-12 h-12 bg-indigo-100 rounded-xl mx-auto mb-4">
-              <Shield className="w-6 h-6 text-[#3F51B5]" />
+            <div className="flex items-center justify-center w-12 h-12 rounded-xl mx-auto mb-4 overflow-hidden">
+              <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
             <CardTitle className="text-2xl font-heading font-bold text-[#333333] text-center">
               Verify Your Email
@@ -142,7 +142,7 @@ const OTPVerification = () => {
                     <InputOTPSlot
                       key={index}
                       index={index}
-                      className="w-12 h-14 text-2xl font-bold border-2 border-gray-200 bg-white rounded-xl focus:border-[#3F51B5] focus:ring-4 focus:ring-[#3F51B5]/10 shadow-sm transition-all duration-200 first:rounded-xl last:rounded-xl"
+                      className="w-12 h-14 text-2xl font-bold border-2 border-indigo-200 bg-white rounded-xl focus:border-[#3F51B5] focus:ring-4 focus:ring-[#3F51B5]/10 shadow-sm transition-all duration-200 first:rounded-xl last:rounded-xl"
                     />
                   ))}
                 </InputOTPGroup>

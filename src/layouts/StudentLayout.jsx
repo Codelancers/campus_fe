@@ -55,12 +55,7 @@ const StudentLayout = () => {
 
   const handleNavigation = (href, mobile = false) => {
     if (mobile) setMobileMenuOpen(false);
-    // Redirect all navigation except dashboard to under construction
-    if (href !== '/student') {
-      navigate('/student/under-construction');
-    } else {
-      navigate(href);
-    }
+    navigate(href);
   };
 
   const NavItems = ({ mobile = false }) => (
@@ -72,8 +67,8 @@ const StudentLayout = () => {
             key={item.name}
             onClick={() => handleNavigation(item.href, mobile)}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 w-full text-left ${isActive
-                ? 'bg-[#3F51B5] text-white shadow-md'
-                : 'text-gray-700 hover:bg-gray-100'
+              ? 'bg-[#3F51B5] text-white shadow-md'
+              : 'text-gray-700 hover:bg-gray-100'
               }`}
             data-testid={`nav-${item.name.toLowerCase()}`}
           >
@@ -107,8 +102,8 @@ const StudentLayout = () => {
                 <div className="flex flex-col h-full">
                   <div className="p-6 border-b">
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-10 h-10 bg-[#3F51B5] rounded-lg">
-                        <GraduationCap className="w-6 h-6 text-white" />
+                      <div className="flex items-center justify-center w-10 h-10 rounded-lg overflow-hidden">
+                        <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
                       </div>
                       <div>
                         <h2 className="font-heading font-bold text-lg text-[#333333]">Campus Events</h2>
@@ -124,8 +119,8 @@ const StudentLayout = () => {
             </Sheet>
 
             <Link to="/student" className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-10 h-10 bg-[#3F51B5] rounded-lg shadow-sm">
-                <GraduationCap className="w-6 h-6 text-white" />
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg overflow-hidden">
+                <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
               </div>
               <span className="hidden sm:block font-heading font-bold text-xl text-[#333333]">
                 Campus Events
@@ -198,8 +193,8 @@ const StudentLayout = () => {
                   key={item.name}
                   onClick={() => handleNavigation(item.href)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-all duration-200 ${isActive
-                      ? 'bg-[#3F51B5] text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
+                    ? 'bg-[#3F51B5] text-white'
+                    : 'text-gray-700 hover:bg-gray-100'
                     }`}
                   data-testid={`desktop-nav-${item.name.toLowerCase()}`}
                 >

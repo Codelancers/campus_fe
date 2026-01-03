@@ -1,50 +1,93 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Bell, Calendar, Award, CheckCheck, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { Client } from '@stomp/stompjs';
+import { getUser } from '@/lib/token';
 
 const Notifications = () => {
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: 'event',
-      title: 'New Event: Tech Hackathon 2025',
-      message: 'A new hackathon event has been added. Register now to participate!',
-      time: '2 hours ago',
-      read: false,
-      icon: Calendar,
-    },
-    {
-      id: 2,
-      type: 'certificate',
-      title: 'Certificate Ready',
-      message: 'Your participation certificate for "AI Workshop" is ready to download.',
-      time: '5 hours ago',
-      read: false,
-      icon: Award,
-    },
-    {
-      id: 3,
-      type: 'reminder',
-      title: 'Event Reminder',
-      message: 'Workshop: AI & ML starts tomorrow at 2:00 PM. Don\'t forget!',
-      time: '1 day ago',
-      read: true,
-      icon: Bell,
-    },
-    {
-      id: 4,
-      type: 'event',
-      title: 'Event Registration Confirmed',
-      message: 'You have successfully registered for "Annual Cultural Fest".',
-      time: '2 days ago',
-      read: true,
-      icon: Calendar,
-    },
-  ]);
+  const [notifications, setNotifications] = useState([]);
+  const stompClient = useRef(null);
+
+  // Initialize WebSocket connection
+  useEffect(() => {
+    // Get user department
+    const user = getUser();
+    const department = user?.department || user?.branch;
+
+    if (!department) {
+      console.warn('Department not found for user, cannot subscribe to notifications');
+      return;
+    }
+
+    console.log('Initializing WebSocket for department:', department);
+
+    const client = new Client({
+      brokerURL: 'ws://localhost:8080/ws/notifications',
+      onConnect: () => {
+        console.log('Connected to WebSocket');
+
+        // Subscribe to department specific topic
+        client.subscribe(`/topic/events/${department}`, (message) => {
+          console.log('Received message:', message.body);
+          try {
+            // Handle both JSON and plain text messages
+            let notificationContent;
+            try {
+              notificationContent = JSON.parse(message.body);
+            } catch (e) {
+              notificationContent = {
+                title: 'New Notification',
+                message: message.body,
+                type: 'info'
+              };
+            }
+
+            const newNotification = {
+              id: Date.now(),
+              type: 'event', // Default type
+              title: notificationContent.title || 'New Event Update',
+              message: notificationContent.message || (typeof notificationContent === 'string' ? notificationContent : 'New update available'),
+              time: 'Just now',
+              read: false,
+              icon: Bell, // Default icon
+              ...notificationContent // Spread any other properties
+            };
+
+            // Map string types to icons if needed
+            if (newNotification.type === 'event') newNotification.icon = Calendar;
+            if (newNotification.type === 'certificate') newNotification.icon = Award;
+
+            setNotifications(prev => [newNotification, ...prev]);
+            toast.info(newNotification.title, {
+              description: newNotification.message,
+            });
+          } catch (error) {
+            console.error('Error processing notification:', error);
+          }
+        });
+      },
+      onDisconnect: () => {
+        console.log('Disconnected from WebSocket');
+      },
+      onStompError: (frame) => {
+        console.error('Broker reported error: ' + frame.headers['message']);
+        console.error('Additional details: ' + frame.body);
+      },
+    });
+
+    client.activate();
+    stompClient.current = client;
+
+    return () => {
+      if (client) {
+        client.deactivate();
+      }
+    };
+  }, []);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -114,6 +157,7 @@ const Notifications = () => {
             <CardContent className="py-12 text-center">
               <Bell className="w-12 h-12 mx-auto text-gray-400 mb-4" />
               <p className="text-gray-500 text-lg">No notifications yet</p>
+              <p className="text-gray-400 text-sm mt-2">New updates will appear here instantly</p>
             </CardContent>
           </Card>
         ) : (
@@ -125,20 +169,17 @@ const Notifications = () => {
               transition={{ duration: 0.3, delay: index * 0.05 }}
             >
               <Card
-                className={`card ${
-                  !notification.read ? 'border-l-4 border-l-[#3F51B5] bg-indigo-50/30' : ''
-                }`}
+                className={`card ${!notification.read ? 'border-l-4 border-l-[#3F51B5] bg-indigo-50/30' : ''
+                  }`}
                 data-testid={`notification-${notification.id}`}
               >
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
                     {/* Icon */}
-                    <div className={`flex items-center justify-center w-12 h-12 rounded-full flex-shrink-0 ${
-                      !notification.read ? 'bg-[#3F51B5]' : 'bg-gray-100'
-                    }`}>
-                      <notification.icon className={`w-6 h-6 ${
-                        !notification.read ? 'text-white' : 'text-gray-500'
-                      }`} />
+                    <div className={`flex items-center justify-center w-12 h-12 rounded-full flex-shrink-0 ${!notification.read ? 'bg-[#3F51B5]' : 'bg-gray-100'
+                      }`}>
+                      <notification.icon className={`w-6 h-6 ${!notification.read ? 'text-white' : 'text-gray-500'
+                        }`} />
                     </div>
 
                     {/* Content */}
@@ -196,5 +237,4 @@ const Notifications = () => {
     </motion.div>
   );
 };
-
 export default Notifications;

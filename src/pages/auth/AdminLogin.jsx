@@ -19,7 +19,7 @@ const AdminLogin = () => {
       toast.error('Please enter your email');
       return;
     }
-    
+
     setLoading(true);
     try {
       await sendAdminOTP(email);
@@ -27,10 +27,10 @@ const AdminLogin = () => {
       navigate('/admin123/verify-otp', { state: { email } });
     } catch (error) {
       console.error('Send OTP error:', error);
-      
+
       // Handle different error formats
       let errorMessage = 'Failed to send OTP. Please try again.';
-      
+
       if (error.message) {
         // Check if it's "admin not found" error
         if (error.message.toLowerCase().includes('admin not found')) {
@@ -53,7 +53,7 @@ const AdminLogin = () => {
           errorMessage = error.response.data.error;
         }
       }
-      
+
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -65,8 +65,8 @@ const AdminLogin = () => {
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8" data-testid="admin-login-header">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-lg mb-4">
-            <Shield className="w-10 h-10 text-[#3F51B5]" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 overflow-hidden">
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-4xl font-heading font-bold text-white mb-2">
             Campus Events
