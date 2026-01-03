@@ -325,7 +325,7 @@ export const deleteEvent = async (eventId) => {
  * @returns {Promise} API response with events list
  */
 export const getAllEvents = async () => {
-  const response = await api.get('/api/events');
+  const response = await api.get('/api/events/all');
   return response.data;
 };
 
