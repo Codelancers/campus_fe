@@ -6,16 +6,18 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Calendar, MapPin, X, Clock, FileText, Tag, Image as ImageIcon, Users, Filter } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAllEvents } from '@/lib/api';
+import { getUser } from '@/lib/token';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const EventsCatalog = () => {
+  const user = getUser();
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedBranch, setSelectedBranch] = useState('all');
+  const [selectedBranch, setSelectedBranch] = useState(user?.branch || 'all');
   const [selectedTab, setSelectedTab] = useState('all');
   const [selectedEvent, setSelectedEvent] = useState(null);
 
@@ -58,7 +60,10 @@ const EventsCatalog = () => {
     }
 
     // Branch Filter (Note: Assuming 'department' matches 'branch' logic/values)
-    if (selectedBranch !== 'all') {
+    const userBranch = user?.branch;
+    if (userBranch) {
+      filtered = filtered.filter((event) => event.department === userBranch);
+    } else if (selectedBranch !== 'all') {
       filtered = filtered.filter((event) => event.department === selectedBranch);
     }
 
@@ -277,19 +282,22 @@ const EventsCatalog = () => {
               />
             </div>
 
-            <Select value={selectedBranch} onValueChange={setSelectedBranch}>
-              <SelectTrigger className="w-full md:w-64 h-11 bg-gray-50" data-testid="branch-filter">
-                <Filter className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Filter by Department" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Departments</SelectItem>
-                <SelectItem value="CSE">CSE</SelectItem>
-                <SelectItem value="ECE">ECE</SelectItem>
-                <SelectItem value="MECH">MECH</SelectItem>
-                <SelectItem value="CIVIL">CIVIL</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Only show branch filter if user doesn't have a specific branch assigned */
+              !user?.branch && (
+                <Select value={selectedBranch} onValueChange={setSelectedBranch}>
+                  <SelectTrigger className="w-full md:w-64 h-11 bg-gray-50" data-testid="branch-filter">
+                    <Filter className="w-4 h-4 mr-2" />
+                    <SelectValue placeholder="Filter by Department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Departments</SelectItem>
+                    <SelectItem value="CSE">CSE</SelectItem>
+                    <SelectItem value="ECE">ECE</SelectItem>
+                    <SelectItem value="MECH">MECH</SelectItem>
+                    <SelectItem value="CIVIL">CIVIL</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
           </div>
         </CardContent>
       </Card>
