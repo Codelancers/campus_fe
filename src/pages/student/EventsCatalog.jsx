@@ -335,8 +335,11 @@ const EventsCatalog = () => {
                     <SelectItem value="all">All Departments</SelectItem>
                     <SelectItem value="CSE">CSE</SelectItem>
                     <SelectItem value="ECE">ECE</SelectItem>
-                    <SelectItem value="MECH">MECH</SelectItem>
-                    <SelectItem value="CIVIL">CIVIL</SelectItem>
+                    <SelectItem value="MEC">MEC</SelectItem>
+                    <SelectItem value="CE">CE</SelectItem>
+                    <SelectItem value="EEE">EEE</SelectItem>
+                    <SelectItem value="CSE-ALLIED">CSE-ALLIED</SelectItem>
+                    <SelectItem value="OTHER">OTHER</SelectItem>
                   </SelectContent>
                 </Select>
               )}

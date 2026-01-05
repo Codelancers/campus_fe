@@ -13,10 +13,11 @@ import { setUserData } from '@/lib/token';
 const BRANCHES = [
   'CSE',
   'ECE',
-  'EEE',
-  'ME',
+  'MEC',
   'CE',
-  'CSE-ALLIED BRANCHES',
+  'EEE',
+  'CSE-ALLIED',
+  'OTHER',
 ];
 
 const YEARS = [

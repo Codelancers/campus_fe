@@ -285,12 +285,13 @@ const StudentProfile = () => {
                         <SelectValue placeholder="Select Branch" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Computer Science">Computer Science</SelectItem>
-                        <SelectItem value="Information Technology">Information Technology</SelectItem>
-                        <SelectItem value="Electronics & Communication">Electronics & Communication</SelectItem>
-                        <SelectItem value="Mechanical Engineering">Mechanical Engineering</SelectItem>
-                        <SelectItem value="Civil Engineering">Civil Engineering</SelectItem>
-                        <SelectItem value="Electrical Engineering">Electrical Engineering</SelectItem>
+                        <SelectItem value="CSE">CSE</SelectItem>
+                        <SelectItem value="ECE">ECE</SelectItem>
+                        <SelectItem value="MEC">MEC</SelectItem>
+                        <SelectItem value="CE">CE</SelectItem>
+                        <SelectItem value="EEE">EEE</SelectItem>
+                        <SelectItem value="CSE-ALLIED">CSE-ALLIED</SelectItem>
+                        <SelectItem value="OTHER">OTHER</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

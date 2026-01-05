@@ -337,15 +337,30 @@ const EventManagement = () => {
                     <div className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-indigo-500" />
-                        <span>{new Date(event.startTime).toLocaleDateString()}</span>
+                        <span>
+                          {(event.startTime || event.start_time)
+                            ? new Date(event.startTime || event.start_time).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })
+                            : 'Date not scheduled'}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock className="w-4 h-4 text-indigo-500" />
-                        <span>{new Date(event.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span>
+                          {(event.startTime || event.start_time)
+                            ? new Date(event.startTime || event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                            : '--:--'}
+                          {(event.endTime || event.end_time) && (
+                            <> - {new Date(event.endTime || event.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</>
+                          )}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <MapPin className="w-4 h-4 text-indigo-500" />
-                        <span className="line-clamp-1">{event.venue}</span>
+                        <span className="line-clamp-1">{event.venue || 'Venue TBD'}</span>
                       </div>
                     </div>
 

@@ -20,27 +20,26 @@ const CreateEvent = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  // Default Times: Start (next hour), End (Start + 2 hours)
+  // Initialize with safe defaults
+  const [startDate, setStartDate] = useState(new Date());
+
+  // Start Time: Next hour
   const getNextHour = () => {
     const d = new Date();
     d.setHours(d.getHours() + 1, 0, 0, 0);
-    return d;
+    return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
   };
+  const [startTime, setStartTime] = useState(getNextHour());
+
+  const [endDate, setEndDate] = useState(new Date());
+
+  // End Time: Start + 2 hours
   const getEndDefault = () => {
     const d = new Date();
     d.setHours(d.getHours() + 3, 0, 0, 0);
-    return d;
+    return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
   };
-
-  const [startDate, setStartDate] = useState(new Date());
-  const [startTime, setStartTime] = useState(
-    getNextHour().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-  );
-
-  const [endDate, setEndDate] = useState(new Date());
-  const [endTime, setEndTime] = useState(
-    getEndDefault().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-  );
+  const [endTime, setEndTime] = useState(getEndDefault());
 
   const [registrationEndDate, setRegistrationEndDate] = useState(new Date());
 
@@ -63,12 +62,13 @@ const CreateEvent = () => {
   const [showRegEndCalendar, setShowRegEndCalendar] = useState(false);
 
   const departments = [
-    { value: 'cse', label: 'CSE' },
-    { value: 'ece', label: 'ECE' },
-    { value: 'eee', label: 'EEE' },
-    { value: 'me', label: 'ME' },
-    { value: 'ce', label: 'CE' },
-    { value: 'cse_aligned', label: 'CSE (Aligned Branches)' },
+    { value: 'CSE', label: 'CSE' },
+    { value: 'ECE', label: 'ECE' },
+    { value: 'MEC', label: 'MEC' },
+    { value: 'CE', label: 'CE' },
+    { value: 'EEE', label: 'EEE' },
+    { value: 'CSE-ALLIED', label: 'CSE-ALLIED' },
+    { value: 'OTHER', label: 'OTHER' },
   ];
 
   const handleInputChange = (field, value) => {
@@ -83,28 +83,41 @@ const CreateEvent = () => {
         return;
       }
       setFormData((prev) => ({ ...prev, poster: file }));
-      const objectUrl = URL.createObjectURL(file);
-      setPosterPreview(objectUrl);
+      setPosterPreview(URL.createObjectURL(file));
     }
   };
 
-  // Improved combining logic to force local time string format "YYYY-MM-DDTHH:mm:ss"
-  // This avoids timezone shifting issues on some backends that expect local time.
+  // ROBUST DATE COMBINER
+  // Ensures we get "YYYY-MM-DDTHH:mm:ss" regardless of local timezone oddities
   const combineDateAndTime = (dateObj, timeString) => {
-    if (!dateObj || !timeString) return null;
+    if (!dateObj || !timeString) {
+      console.error("Missing date or time component", { dateObj, timeString });
+      return null;
+    }
 
-    const [hours, minutes] = timeString.split(':').map(Number);
-    const year = dateObj.getFullYear();
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const day = String(dateObj.getDate()).padStart(2, '0');
+    const date = new Date(dateObj);
+    if (isNaN(date.getTime())) {
+      console.error("Invalid date object provided");
+      return null;
+    }
+
+    const parts = timeString.split(':');
+    if (parts.length < 2) return null;
+
+    const hours = parseInt(parts[0], 10);
+    const minutes = parseInt(parts[1], 10);
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
     const hh = String(hours).padStart(2, '0');
     const mm = String(minutes).padStart(2, '0');
 
-    // Return standard ISO format without 'Z' to imply local time, typical for form submissions unless UTC is strictly required
+    // Explicit ISO 8601 format (Local Time)
     return `${year}-${month}-${day}T${hh}:${mm}:00`;
   };
 
-  // Helper for just date YYYY-MM-DD
+  // Helper for pure Date string "YYYY-MM-DD"
   const formatDateForApi = (date) => {
     if (!date) return null;
     const year = date.getFullYear();
@@ -133,20 +146,24 @@ const CreateEvent = () => {
         return;
       }
 
-      // Combine Dates
+      // Generate Timestamps
       const startDateTimeStr = combineDateAndTime(startDate, startTime);
       const endDateTimeStr = combineDateAndTime(endDate, endTime);
-
-      // Ensure registration deadline is valid - defaulting to end of day if only date provided, 
-      // but API often takes just YYYY-MM-DD. Using pure date here as defined in previous steps.
       const regDateStr = formatDateForApi(registrationEndDate);
 
+      console.log("Generated Timestamps:", {
+        start: startDateTimeStr,
+        end: endDateTimeStr,
+        registration: regDateStr
+      });
+
       if (!startDateTimeStr || !endDateTimeStr) {
-        toast.error('Please select valid start and end dates and times.');
+        toast.error('Invalid Date/Time. Please check your inputs.');
         setLoading(false);
         return;
       }
 
+      // Max Participants
       let maxParticipantsVal = 0;
       if (formData.maxParticipantsSelection === 'custom') {
         maxParticipantsVal = parseInt(formData.maxParticipantsCustom);
@@ -160,13 +177,13 @@ const CreateEvent = () => {
         return;
       }
 
-      // 4. Construct FormData Payload
+      // Construct Payload
       const data = new FormData();
       data.append('title', formData.title);
       data.append('description', formData.description);
       data.append('department', formData.department);
       data.append('venue', formData.venue);
-      // Sending combined strings directly
+      // Sending exact string format requested: "2025-12-26T09:00:00"
       data.append('startTime', startDateTimeStr);
       data.append('endTime', endDateTimeStr);
       data.append('maxParticipants', maxParticipantsVal);
@@ -179,7 +196,11 @@ const CreateEvent = () => {
         data.append('poster', formData.poster);
       }
 
-      console.log("Submitting Event:", { startDateTimeStr, endDateTimeStr, regDateStr });
+      // Log FormData Key-Values for debugging
+      console.log("=== FINAL PAYLOAD ===");
+      for (const pair of data.entries()) {
+        console.log(`${pair[0]}: ${pair[1]}`);
+      }
 
       await createEvent(creatorId, data);
 

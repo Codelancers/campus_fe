@@ -105,6 +105,11 @@ export const deleteUser = async (userId) => {
   return res.data;
 };
 
+export const getUsersByDepartment = async (department) => {
+  const res = await api.get(`/api/users/department/${department}`);
+  return res.data;
+};
+
 // =====================================================
 // EVENT APIs  ✅ ALWAYS FORM-DATA
 // =====================================================
