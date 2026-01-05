@@ -155,6 +155,14 @@ export const getAllEvents = async () => {
   return res.data;
 };
 
+export const applyForEvent = async (eventId, rollNo) => {
+  const res = await api.post('/api/registrations/apply', {
+    eventId,
+    rollNo
+  });
+  return res.data;
+};
+
 // =====================================================
 // NOTIFICATION APIs
 // =====================================================

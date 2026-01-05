@@ -7,26 +7,68 @@ import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { Client } from '@stomp/stompjs';
 import { getUser } from '@/lib/token';
+import { getAllNotifications } from '@/lib/api';
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const stompClient = useRef(null);
 
-  // Initialize WebSocket connection
+
+
+  // Initialize WebSocket connection and fetch initial notifications
   useEffect(() => {
     // Get user department
     const user = getUser();
-    const department = user?.department || user?.branch;
+    // Prioritize localStorage 'department' or 'branch' as seen in other files, then user object
+    const department = localStorage.getItem('department') || user?.department || user?.branch;
 
     if (!department) {
       console.warn('Department not found for user, cannot subscribe to notifications');
       return;
     }
 
+    const fetchInitialNotifications = async () => {
+      try {
+        const data = await getAllNotifications();
+        // Filter notifications by department
+        const filtered = data.filter(n => {
+          const targetDept = n.target?.department;
+          // Keep if target is 'All' or matches user department (case-insensitive)
+          return (
+            !targetDept ||
+            targetDept.toLowerCase() === 'all' ||
+            targetDept.toLowerCase() === department.toLowerCase()
+          );
+        });
+
+        // Map API response to UI format if necessary (assuming API returns similar structure to WS message)
+        const mappedNotifications = filtered.map(n => ({
+          id: n.id || Date.now() + Math.random(),
+          type: 'event', // You might want to map this from API if available
+          title: n.title,
+          message: n.message,
+          time: n.createdAt ? new Date(n.createdAt).toLocaleString() : 'Recently',
+          read: false, // Default to unread for now, or check 'readBy' if implemented
+          icon: Bell, // Default
+          ...n
+        }));
+
+        // Sort by latest (assuming createdAt exists, otherwise keep order)
+        mappedNotifications.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+        setNotifications(mappedNotifications);
+      } catch (error) {
+        console.error("Failed to fetch notifications:", error);
+        toast.error("Failed to load notifications");
+      }
+    };
+
+    fetchInitialNotifications();
+
     console.log('Initializing WebSocket for department:', department);
 
     const client = new Client({
-      brokerURL: 'ws://localhost:8080/ws/notifications',
+      brokerURL: 'ws://localhost:7080/ws/notifications', // Updated port to 7080 to match API
       onConnect: () => {
         console.log('Connected to WebSocket');
 

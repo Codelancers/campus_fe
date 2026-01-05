@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Search, Calendar, MapPin, X, Clock, FileText, Tag, Image as ImageIcon, Users, Filter } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getAllEvents } from '@/lib/api';
+import { getAllEvents, applyForEvent } from '@/lib/api';
 import { getUser } from '@/lib/token';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,15 +13,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const EventsCatalog = () => {
   const user = getUser();
-  // Fallback to direct localStorage access if 'branch' is stored separately
-  const userBranch = user?.branch || localStorage.getItem('branch');
+  // Get department from user object or directly from localStorage as requested
+  // "department": "CSE"
+  const userDepartment = user?.department || localStorage.getItem('department');
 
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  // Initialize selectedBranch with the user's branch if available
-  const [selectedBranch, setSelectedBranch] = useState(userBranch || 'all');
+  // Initialize selectedBranch with the user's department if available
+  const [selectedBranch, setSelectedBranch] = useState(userDepartment || 'all');
   const [selectedTab, setSelectedTab] = useState('all');
   const [selectedEvent, setSelectedEvent] = useState(null);
 
@@ -62,15 +63,15 @@ const EventsCatalog = () => {
       );
     }
 
-    // 2. Branch Filter
-    // If we have a user branch, we strictly show ONLY that branch's events.
-    if (userBranch) {
+    // 2. Department/Branch Filter
+    // If we have a user department, we strictly show ONLY that department's events.
+    if (userDepartment) {
       filtered = filtered.filter((event) => {
-        // Ensure strictly matching branch, case-insensitive
-        return event.department && event.department.toLowerCase() === userBranch.toLowerCase();
+        // Ensure strictly matching department, case-insensitive
+        return event.department && event.department.toLowerCase() === userDepartment.toLowerCase();
       });
     } else {
-      // Only allow manual filtering if no user branch is locked
+      // Only allow manual filtering if no user department is locked
       if (selectedBranch !== 'all') {
         filtered = filtered.filter((event) => event.department === selectedBranch);
       }
@@ -103,9 +104,45 @@ const EventsCatalog = () => {
     return null;
   };
 
-  const handleRegister = (e, eventId) => {
+
+
+  const handleRegister = async (e, eventId) => {
     e.stopPropagation();
-    toast.success("Registration feature coming soon!");
+
+    // 1. Get Roll Number
+    // Prioritize localStorage as specificied
+    const rollNo = localStorage.getItem('rollNo') || user?.rollNo;
+
+    if (!rollNo) {
+      toast.error("Student Roll Number not found. Please update profile.");
+      return;
+    }
+
+    try {
+      // 2. Call API
+      await applyForEvent(eventId, rollNo);
+
+      // 3. Update State (Optimistic Update)
+      // Mark this event as registered in the main events list so it appears in "Registered" tab immediately
+      setEvents(prevEvents =>
+        prevEvents.map(ev =>
+          (ev.id === eventId || ev.eventId === eventId)
+            ? { ...ev, registered: true, count: (ev.count || 0) + 1 }
+            : ev
+        )
+      );
+
+      // Also update selectedEvent if it's currently open
+      if (selectedEvent && (selectedEvent.id === eventId || selectedEvent.eventId === eventId)) {
+        setSelectedEvent(prev => ({ ...prev, registered: true, count: (prev.count || 0) + 1 }));
+      }
+
+      toast.success("Successfully registered for the event!");
+
+    } catch (error) {
+      console.error("Registration failed:", error);
+      toast.error(error.response?.data?.message || "Failed to register. Please try again.");
+    }
   };
 
   const EventDetailsModal = ({ event, onClose }) => {
@@ -287,8 +324,8 @@ const EventsCatalog = () => {
               />
             </div>
 
-            {/* Only show branch filter if user doesn't have a specific branch assigned */
-              !userBranch && (
+            {/* Only show branch filter if user doesn't have a specific department assigned */
+              !userDepartment && (
                 <Select value={selectedBranch} onValueChange={setSelectedBranch}>
                   <SelectTrigger className="w-full md:w-64 h-11 bg-gray-50" data-testid="branch-filter">
                     <Filter className="w-4 h-4 mr-2" />
