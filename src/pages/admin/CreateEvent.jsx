@@ -13,36 +13,51 @@ import Calendar from 'react-calendar';
 import TimePicker from 'react-time-picker';
 import 'react-calendar/dist/Calendar.css';
 import 'react-time-picker/dist/TimePicker.css';
-// import 'react-clock/dist/Clock.css'; // Removed as react-clock is not in package.json
 import { createEvent } from '@/lib/api';
 import './CreateEventCustom.css';
 
 const CreateEvent = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+
+  // Default Times: Start (next hour), End (Start + 2 hours)
+  const getNextHour = () => {
+    const d = new Date();
+    d.setHours(d.getHours() + 1, 0, 0, 0);
+    return d;
+  };
+  const getEndDefault = () => {
+    const d = new Date();
+    d.setHours(d.getHours() + 3, 0, 0, 0);
+    return d;
+  };
+
+  const [startDate, setStartDate] = useState(new Date());
+  const [startTime, setStartTime] = useState(
+    getNextHour().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+  );
+
+  const [endDate, setEndDate] = useState(new Date());
+  const [endTime, setEndTime] = useState(
+    getEndDefault().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+  );
+
+  const [registrationEndDate, setRegistrationEndDate] = useState(new Date());
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     department: '',
     venue: '',
-    maxParticipantsSelection: '', // For the dropdown logic
+    maxParticipantsSelection: '',
     maxParticipantsCustom: '',
     skillTags: '',
     requirements: '',
-    eventType: '0', // Default '0' for Technical
-    poster: null,   // Stores the File object
+    eventType: '0',
+    poster: null,
   });
 
   const [posterPreview, setPosterPreview] = useState('');
-
-  // Date and Time states
-  const [startDate, setStartDate] = useState(new Date());
-  const [startTime, setStartTime] = useState('10:00');
-  const [endDate, setEndDate] = useState(new Date());
-  const [endTime, setEndTime] = useState('12:00');
-  const [registrationEndDate, setRegistrationEndDate] = useState(new Date());
-
-  // UI States for Calendar popups
   const [showStartCalendar, setShowStartCalendar] = useState(false);
   const [showEndCalendar, setShowEndCalendar] = useState(false);
   const [showRegEndCalendar, setShowRegEndCalendar] = useState(false);
@@ -67,20 +82,29 @@ const CreateEvent = () => {
         toast.error('Only PNG and JPG images are allowed.');
         return;
       }
-
-      // Store file object for FormData
       setFormData((prev) => ({ ...prev, poster: file }));
-
-      // Create preview URL
       const objectUrl = URL.createObjectURL(file);
       setPosterPreview(objectUrl);
-
-      // Note: In a real app, we should cleanup this URL using useEffect or when component unmounts
-      // but for this simple interaction, relying on browser cleanup is acceptable or we can add useEffect.
     }
   };
 
-  // Helper to format date as YYYY-MM-DD
+  // Improved combining logic to force local time string format "YYYY-MM-DDTHH:mm:ss"
+  // This avoids timezone shifting issues on some backends that expect local time.
+  const combineDateAndTime = (dateObj, timeString) => {
+    if (!dateObj || !timeString) return null;
+
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const hh = String(hours).padStart(2, '0');
+    const mm = String(minutes).padStart(2, '0');
+
+    // Return standard ISO format without 'Z' to imply local time, typical for form submissions unless UTC is strictly required
+    return `${year}-${month}-${day}T${hh}:${mm}:00`;
+  };
+
+  // Helper for just date YYYY-MM-DD
   const formatDateForApi = (date) => {
     if (!date) return null;
     const year = date.getFullYear();
@@ -94,18 +118,13 @@ const CreateEvent = () => {
     setLoading(true);
 
     try {
-      // 1. Get Creator ID from localStorage
-      // 1. Get Creator ID from localStorage
       const adminDataString = localStorage.getItem('adminData');
       let creatorId = null;
-
       if (adminDataString) {
         try {
           const adminData = JSON.parse(adminDataString);
           if (adminData.id) creatorId = adminData.id;
-        } catch (err) {
-          console.error("Error parsing adminData", err);
-        }
+        } catch (err) { console.error(err); }
       }
 
       if (!creatorId) {
@@ -114,28 +133,20 @@ const CreateEvent = () => {
         return;
       }
 
-      // 2. Construct Date Objects
-      const combineDateAndTime = (dateObj, timeString) => {
-        if (!dateObj || !timeString) return null;
-        const [hours, minutes] = timeString.split(':').map(Number);
-        const newDate = new Date(dateObj);
-        newDate.setHours(hours);
-        newDate.setMinutes(minutes);
-        newDate.setSeconds(0);
-        newDate.setMilliseconds(0);
-        return newDate.toISOString();
-      };
+      // Combine Dates
+      const startDateTimeStr = combineDateAndTime(startDate, startTime);
+      const endDateTimeStr = combineDateAndTime(endDate, endTime);
 
-      const startDateTimeIso = combineDateAndTime(startDate, startTime);
-      const endDateTimeIso = combineDateAndTime(endDate, endTime);
+      // Ensure registration deadline is valid - defaulting to end of day if only date provided, 
+      // but API often takes just YYYY-MM-DD. Using pure date here as defined in previous steps.
+      const regDateStr = formatDateForApi(registrationEndDate);
 
-      if (!startDateTimeIso || !endDateTimeIso) {
+      if (!startDateTimeStr || !endDateTimeStr) {
         toast.error('Please select valid start and end dates and times.');
         setLoading(false);
         return;
       }
 
-      // 3. Max Participants Logic
       let maxParticipantsVal = 0;
       if (formData.maxParticipantsSelection === 'custom') {
         maxParticipantsVal = parseInt(formData.maxParticipantsCustom);
@@ -155,34 +166,28 @@ const CreateEvent = () => {
       data.append('description', formData.description);
       data.append('department', formData.department);
       data.append('venue', formData.venue);
-      data.append('startTime', startDateTimeIso);
-      data.append('endTime', endDateTimeIso);
+      // Sending combined strings directly
+      data.append('startTime', startDateTimeStr);
+      data.append('endTime', endDateTimeStr);
       data.append('maxParticipants', maxParticipantsVal);
       data.append('skillTags', formData.skillTags);
       data.append('requirements', formData.requirements);
-      data.append('registrationEndDate', formatDateForApi(registrationEndDate));
+      data.append('registrationEndDate', regDateStr);
       data.append('eventType', formData.eventType);
 
       if (formData.poster) {
         data.append('poster', formData.poster);
       }
 
-      console.log("Creating Event FormData Payload");
-      // Debug log
-      for (let pair of data.entries()) {
-        console.log(pair[0] + ': ' + pair[1]);
-      }
+      console.log("Submitting Event:", { startDateTimeStr, endDateTimeStr, regDateStr });
 
-      // 5. Call API
-      // Since we are sending FormData, createEvent needs to handle it correctly.
-      // Axios usually detects FormData and sets headers.
       await createEvent(creatorId, data);
 
       toast.success('Event created successfully!');
       navigate('/admin/events');
     } catch (error) {
       console.error("Create Event Error:", error);
-      toast.error(error.message || 'Failed to create event. Please try again.');
+      toast.error(error.message || 'Failed to create event.');
     } finally {
       setLoading(false);
     }
@@ -415,9 +420,6 @@ const CreateEvent = () => {
                       </div>
                     )}
                   </div>
-                  <div className="h-12 flex items-center text-xs text-slate-500 italic">
-                    Participants cannot register after this date.
-                  </div>
                 </div>
               </div>
             </div>
@@ -454,7 +456,7 @@ const CreateEvent = () => {
               </div>
             </div>
 
-            {/* Poster Upload (Only 1 image field now) */}
+            {/* Poster Upload */}
             <div className="space-y-4">
               <Label className="text-sm font-medium flex items-center gap-2">
                 <ImageIcon className="w-4 h-4" />

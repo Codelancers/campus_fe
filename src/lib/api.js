@@ -109,19 +109,24 @@ export const deleteUser = async (userId) => {
 // EVENT APIs  ✅ ALWAYS FORM-DATA
 // =====================================================
 export const createEvent = async (creatorId, eventData) => {
-  const formData = new FormData();
+  let payload;
 
-  Object.keys(eventData).forEach((key) => {
-    if (Array.isArray(eventData[key])) {
-      eventData[key].forEach((val) => formData.append(key, val));
-    } else {
-      formData.append(key, eventData[key]);
-    }
-  });
+  if (eventData instanceof FormData) {
+    payload = eventData;
+  } else {
+    payload = new FormData();
+    Object.keys(eventData).forEach((key) => {
+      if (Array.isArray(eventData[key])) {
+        eventData[key].forEach((val) => payload.append(key, val));
+      } else {
+        payload.append(key, eventData[key]);
+      }
+    });
+  }
 
   const res = await api.post(
     '/api/events/create',
-    formData,
+    payload,
     {
       params: { creatorId },
       headers: { 'Content-Type': 'multipart/form-data' },
