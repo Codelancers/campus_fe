@@ -13,11 +13,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const EventsCatalog = () => {
   const user = getUser();
+  // Fallback to direct localStorage access if 'branch' is stored separately
+  const userBranch = user?.branch || localStorage.getItem('branch');
+
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedBranch, setSelectedBranch] = useState(user?.branch || 'all');
+  // Initialize selectedBranch with the user's branch if available
+  const [selectedBranch, setSelectedBranch] = useState(userBranch || 'all');
   const [selectedTab, setSelectedTab] = useState('all');
   const [selectedEvent, setSelectedEvent] = useState(null);
 
@@ -37,7 +41,6 @@ const EventsCatalog = () => {
       // Sort by latest first
       const sortedEvents = Array.isArray(data) ? data.sort((a, b) => new Date(b.startTime) - new Date(a.startTime)) : [];
       setEvents(sortedEvents);
-      // Let existing filter logic handle setting filteredEvents
     } catch (error) {
       console.error('Error fetching events:', error);
       toast.error('Failed to load events.');
@@ -49,7 +52,7 @@ const EventsCatalog = () => {
   const filterEvents = () => {
     let filtered = [...events];
 
-    // Search Filter
+    // 1. Search Filter
     if (searchQuery.trim()) {
       const lowerQuery = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -59,15 +62,21 @@ const EventsCatalog = () => {
       );
     }
 
-    // Branch Filter (Note: Assuming 'department' matches 'branch' logic/values)
-    const userBranch = user?.branch;
+    // 2. Branch Filter
+    // If we have a user branch, we strictly show ONLY that branch's events.
     if (userBranch) {
-      filtered = filtered.filter((event) => event.department === userBranch);
-    } else if (selectedBranch !== 'all') {
-      filtered = filtered.filter((event) => event.department === selectedBranch);
+      filtered = filtered.filter((event) => {
+        // Ensure strictly matching branch, case-insensitive
+        return event.department && event.department.toLowerCase() === userBranch.toLowerCase();
+      });
+    } else {
+      // Only allow manual filtering if no user branch is locked
+      if (selectedBranch !== 'all') {
+        filtered = filtered.filter((event) => event.department === selectedBranch);
+      }
     }
 
-    // Tab Filter (Status/Registered)
+    // 3. Tab Filter (Status/Registered)
     const now = new Date();
     if (selectedTab !== 'all') {
       if (selectedTab === 'upcoming') {
@@ -75,10 +84,6 @@ const EventsCatalog = () => {
       } else if (selectedTab === 'past') {
         filtered = filtered.filter(event => new Date(event.startTime) <= now);
       } else if (selectedTab === 'registered') {
-        // Basic mock for registered status until backend supports it per-user
-        // Currently assuming 'registered' flag might not exist on public list, 
-        // so this might be empty unless we track it locally or in a separate API call.
-        // For now, checks if event has a 'registered' property 
         filtered = filtered.filter(event => event.registered === true);
       }
     }
@@ -283,7 +288,7 @@ const EventsCatalog = () => {
             </div>
 
             {/* Only show branch filter if user doesn't have a specific branch assigned */
-              !user?.branch && (
+              !userBranch && (
                 <Select value={selectedBranch} onValueChange={setSelectedBranch}>
                   <SelectTrigger className="w-full md:w-64 h-11 bg-gray-50" data-testid="branch-filter">
                     <Filter className="w-4 h-4 mr-2" />
