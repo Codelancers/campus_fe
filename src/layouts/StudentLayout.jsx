@@ -38,9 +38,16 @@ const StudentLayout = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Get user data from local storage
+  // Get user data from local storage
   const [user] = useState(() => {
     const storedUser = getUser();
-    return storedUser || {
+    if (storedUser) {
+      return {
+        ...storedUser,
+        points: storedUser.points || localStorage.getItem('points') || 0
+      };
+    }
+    return {
       name: 'Student',
       email: 'student@college.edu',
       branch: 'General',

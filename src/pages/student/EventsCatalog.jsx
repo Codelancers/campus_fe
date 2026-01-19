@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const EventsCatalog = () => {
+  const location = useLocation();
   const user = getUser();
   // Get department from user object or directly from localStorage as requested
   // "department": "CSE"
@@ -29,6 +31,20 @@ const EventsCatalog = () => {
   useEffect(() => {
     fetchEvents();
   }, []);
+
+  useEffect(() => {
+    // Check if we need to open a specific event from navigation state
+    if (events.length > 0 && location.state?.openEventId) {
+      const eventIdToOpen = location.state.openEventId;
+      const eventToOpen = events.find(e => (e.eventId || e.id) === eventIdToOpen);
+
+      if (eventToOpen) {
+        setSelectedEvent(eventToOpen);
+        // Clear state to prevent reopening on refresh (optional but good UX)
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [events, location.state]);
 
   useEffect(() => {
     filterEvents();
@@ -110,11 +126,12 @@ const EventsCatalog = () => {
     e.stopPropagation();
 
     // 1. Get Roll Number
-    // Prioritize localStorage as specificied
-    const rollNo = localStorage.getItem('rollNo') || user?.rollNo;
+    // Retrieve from stored user object (standard path) or direct localStorage (fallback)
+    const rollNo = user?.rollNo || localStorage.getItem('rollNo');
 
     if (!rollNo) {
-      toast.error("Student Roll Number not found. Please update profile.");
+      console.error("Roll number missing. User object:", user);
+      toast.error("Student Roll Number not found. Please log in again.");
       return;
     }
 
@@ -286,7 +303,7 @@ const EventsCatalog = () => {
             <Button
               className="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/30"
               onClick={(e) => {
-                handleRegister(e, event.id || event.eventId);
+                handleRegister(e, event.eventId);
                 onClose();
               }}
             >
@@ -450,6 +467,15 @@ const EventsCatalog = () => {
                         <div className="mt-5 pt-4 border-t border-gray-100 flex gap-2">
                           <Button
                             className="w-full bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border-0"
+                            onClick={(e) => {
+                              handleRegister(e, event.eventId);
+                            }}
+                          >
+                            Register Now
+                          </Button>
+                          <Button
+                            className="w-full bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border-0"
+                            onClick={() => setSelectedEvent(event)}
                           >
                             View Details
                           </Button>
